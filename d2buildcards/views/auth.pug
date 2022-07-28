@@ -1,0 +1,6 @@
+extends layout 
+
+block content 
+    div(class='d-flex flex-column align-items-center min-vh-100 justify-content-center')
+        form(action='./auth/', method='post')
+            input(type='submit', value='Authorize with Bungie.net', class='btn-auth')
