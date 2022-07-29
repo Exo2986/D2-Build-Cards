@@ -2,3 +2,4 @@ certs/cert.key
 certs/cert.pem
 certs/req.cnf
 d2buildcards/config.js
+manifest/*
