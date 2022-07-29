@@ -1,6 +1,8 @@
 var express = require('express');
 var axios = require('axios').default;
 var config = require('./../config.js');
+var manifest = require('./../manifest.js')
+var objects = require('./../objects.js')
 var api = require('./../api.js')
 
 const instance = axios.create({
@@ -69,20 +71,30 @@ router.get('/', async function(req, res, next){
     var membershipId = req.cookies['membership_id']
     var accessToken = req.signedCookies['access_token']
 
-    // instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}`, {
-    //     headers: {
-    //         'Authorization': `Bearer ${accessToken}`
-    //     },
-    //     params: {
-    //         'components': 'Characters'
-    //     }
-    // })
-    // .then(function(response) {
-    //     console.log(response)
-    // })
-    // .catch(function(error) {
-    //     console.log(error)
-    // });
+    instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}`, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        },
+        params: {
+            'components': '200,205,305,304,302'
+        }
+    })
+    .then(function(response) {
+        for (var character in response.data.Response.characters.data) {
+            var characterData = response.data.Response.characters.data[character]
+            var characterEquipment = response.data.Response.characterEquipment.data[character]
+            var itemComponents = response.data.Response.itemComponents
+
+            objects.character(characterData, characterEquipment, itemComponents)
+            .then((character) => {
+                console.log(character)
+            })
+        }
+    })
+    .catch(function(error) {
+        console.log(error)
+    });
+
     res.render('auth', {title: 'Cards'})
 });
 

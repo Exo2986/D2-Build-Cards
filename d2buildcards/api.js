@@ -2,6 +2,7 @@ var axios = require('axios').default;
 var config = require('./config.js');
 var extract = require('extract-zip')
 var path = require('path')
+var manifest = require('./manifest.js')
 var fs = require('fs')
 
 var api = {}
@@ -78,6 +79,8 @@ api.getManifest = function () {
                 unzipManifest()
                 .then(() => {
                     renameManifestDatabase()
+
+                    manifest.openDatabaseConnection()
                     
                     api.manifest = true
                     console.log('manifest acquired')
