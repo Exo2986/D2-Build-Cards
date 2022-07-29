@@ -1,5 +1,7 @@
 var axios = require('axios').default;
 var config = require('./config.js');
+var extract = require('extract-zip')
+var path = require('path')
 var fs = require('fs')
 
 var api = {}
@@ -63,14 +65,24 @@ api.getUserMembershipInfo = async function (accessToken) {
 }
 
 api.getManifest = function () {
+    deleteOldManifest()
+
     instance.get('/Destiny2/Manifest/')
     .then(function(response) {
-        manifest_path = response.data.Response.jsonWorldContentPaths.en
+        manifest_path = response.data.Response.mobileWorldContentPaths.en
         manifest_url = `http://www.bungie.net${manifest_path}`
-        instance.get(manifest_url)
+        instance.get(manifest_url, {responseType: 'stream'})
         .then(function(response) {
-            api.manifest = response.data;
-            console.log("manifest acquired")
+            downloadManifest(response)
+            .then(() => {
+                unzipManifest()
+                .then(() => {
+                    renameManifestDatabase()
+                    
+                    api.manifest = true
+                    console.log('manifest acquired')
+                })
+            })
         })
         .catch(function(error) {
             console.log(error)
@@ -79,6 +91,59 @@ api.getManifest = function () {
     .catch(function(error) {
         console.log(error);
     });
+}
+
+async function downloadManifest(response) {
+    return new Promise((fulfill, reject) => {
+        var writeStream = fs.createWriteStream('./manifest.zip');
+
+        response.data.pipe(writeStream)
+        
+        writeStream.on('finish', fulfill)
+        writeStream.on('error', reject)
+    })
+}
+
+async function unzipManifest() {
+    return new Promise(async (fulfill, reject) => {
+        var zipPath = path.resolve('./manifest.zip')
+
+        try {
+            await extract(zipPath, {
+                dir: path.resolve('./manifest')
+            })
+
+            fs.unlinkSync(zipPath)
+
+            fulfill()
+        } catch(err) {
+            console.log(err)
+        }
+
+        reject()
+    })
+}
+
+function renameManifestDatabase() {
+    var manifestPath = path.resolve('./manifest');
+    var files = fs.readdirSync(manifestPath)
+
+    files.forEach(file => fs.renameSync(
+        manifestPath + `/${file}`,
+        manifestPath + '/manifest.db',
+        err => console.log(err)
+    ))
+}
+
+function deleteOldManifest() {
+    var manifestPath = path.resolve('./manifest');
+    var files = fs.readdirSync(manifestPath)
+
+    files.forEach(file => {
+        if (file.endsWith('.db') || file.endsWith('.content')) {
+            fs.unlinkSync(manifestPath + `/${file}`)
+        }
+    })
 }
 
 module.exports = api;
