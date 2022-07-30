@@ -140,11 +140,15 @@ function renameManifestDatabase() {
 
 function deleteOldManifest() {
     var manifestPath = path.resolve('./manifest');
-    var files = fs.readdirSync(manifestPath)
+    fs.access(manifestPath, (err) => {
+        if (!err) {
+            var files = fs.readdirSync(manifestPath)
 
-    files.forEach(file => {
-        if (file.endsWith('.db') || file.endsWith('.content')) {
-            fs.unlinkSync(manifestPath + `/${file}`)
+            files.forEach(file => {
+                if (file.endsWith('.db') || file.endsWith('.content')) {
+                    fs.unlinkSync(manifestPath + `/${file}`)
+                }
+            })
         }
     })
 }
