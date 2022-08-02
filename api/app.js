@@ -5,6 +5,7 @@ var fs = require('fs');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors')
 var config = require('./config.js');
 var api = require('./api.js')
 
@@ -25,6 +26,8 @@ var cardsRouter = require('./routes/cards');
 
 var app = express();
 
+app.use(cors())
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -43,13 +46,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use('/', indexRouter);
 // app.use('/users', usersRouter);
 
-app.use('/auth', authRouter);
-app.use('/cards', cardsRouter);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+app.use('/api/auth', authRouter);
+app.use('/api/cards', cardsRouter);
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -61,6 +59,15 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+//serve react files
+var reactBuildDir = path.join(__dirname, '..', '/client/build')
+
+app.use(express.static(reactBuildDir))
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(reactBuildDir, 'index.html'))
+})
 
 var port = 8001
 

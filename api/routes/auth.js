@@ -4,12 +4,10 @@ var config = require('./../config.js');
 
 var router = express.Router();
 
-router.get('/', function(req, res, next){
-    res.render('auth', {title: 'Authentication Portal'})
-});
-
-router.post('/', function(req, res, next) {
-    res.redirect(config.d2_auth_base_url + `?client_id=${config.d2_client_id}&response_type=code`)
+router.get('/', function(req, res, next) {
+    res.json({
+        url: config.d2_auth_base_url + `?client_id=${config.d2_client_id}&response_type=code`
+    })
 });
 
 router.get('/callback', async function(req, res, next) {
@@ -22,7 +20,7 @@ router.get('/callback', async function(req, res, next) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': `Basic ${Buffer.from(`${config.d2_client_id}:${config.d2_client_secret}`).toString('base64')}`
-        },
+        }
     })
     .then(function(response) {
         res.cookie('access_token', response.data.access_token, {
@@ -35,13 +33,15 @@ router.get('/callback', async function(req, res, next) {
             signed: true
         });
 
+        res.json({
+            success: true,
+        })
+
         console.log('hello')
     })
     .catch(function(error) {
         console.log(error)
     });
-
-    res.redirect('/cards')
 });
 
 module.exports = router;

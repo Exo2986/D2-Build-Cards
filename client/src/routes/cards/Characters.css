@@ -1,0 +1,11 @@
+.btn-character {
+    font: 32px "Open Sans", Arial, sans-serif;
+    border-color: rgba(128, 128, 128, 20) !important;
+    border-top: 0px !important;
+    border-bottom: 0px !important;
+}
+
+.btn-character:hover,
+.btn-character:focus {
+    background-color: rgba(128, 128, 128, 75) !important;
+}

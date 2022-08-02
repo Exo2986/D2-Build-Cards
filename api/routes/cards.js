@@ -94,8 +94,6 @@ router.get('/', async function(req, res, next){
     .catch(function(error) {
         console.log(error)
     });
-
-    res.render('auth', {title: 'Cards'})
 });
 
 module.exports = router;
