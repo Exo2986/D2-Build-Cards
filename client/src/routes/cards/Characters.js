@@ -1,13 +1,17 @@
-import React, { useEffect } from 'react'
-import { Stack, Row, Button } from 'react-bootstrap'
+import React from 'react'
+import { Stack, Button } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import axios from 'axios'
-import { useLocation, useNavigate } from 'react-router-dom'
 import './Characters.css'
+import { useNavigate } from 'react-router-dom'
 
 function CharacterButton(props) {
+    const navigate = useNavigate()
     return (
-        <Button variant='outline-secondary' className='min-vh-100 w-25 rounded-0 btn-character'>{props.classType}</Button>
+        <Button variant='outline-secondary' className='min-vh-100 w-25 rounded-0 btn-character' onClick={() => navigate('/cards/card', {
+            state: {
+                charClass: props.classType
+            }
+        })}>{props.classType}</Button>
     )
 }
 
