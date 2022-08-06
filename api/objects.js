@@ -11,10 +11,11 @@ Fragments have the trait id: "item_type.fragment"
 Super plug category ends with supers
 Class ability plug category ends with class_abilities
 Melee plug category ends with melee
-Grenade plug category ends with grenade
+Grenade plug category ends with grenades
+Jump plug category ends with movement
 */
 
-function icon(path) {
+function bungieResourcePath(path) {
     return 'https://www.bungie.net/' + path
 }
 
@@ -41,7 +42,7 @@ objects.character = function(characterData, characterEquipment, itemComponents) 
             var statJson = await manifest.getJSONFromHash(key, manifest.manifestTables.Stat)
             statJson = JSON.parse(statJson.json)
             var statName = statJson.displayProperties.name
-            var statIcon = icon(statJson.displayProperties.icon)
+            var statIcon = bungieResourcePath(statJson.displayProperties.icon)
 
             character.stats[statName] = {
                 icon: statIcon,
@@ -73,6 +74,15 @@ objects.character = function(characterData, characterEquipment, itemComponents) 
                 }
                 
                 character.armor.push(await objects.armor(item, itemComponentsData))
+            } else if (itemJson.traitIds
+                && (itemJson.traitIds.includes('item_type.dark_subclass') 
+                || itemJson.traitIds.includes('item_type.light_subclass'))) { //it's a subclass
+
+                var itemComponentsData = {
+                    sockets: itemComponents.sockets.data[item.itemInstanceId].sockets
+                }
+
+                character.subclass = await objects.subclass(item, itemComponentsData)
             }
         }
 
@@ -91,9 +101,87 @@ objects.subclass = function(itemData, itemComponentsData) {
 
         subclass.json = JSON.parse(json.json)
 
-        //
-        subclass.screenshot = icon(subclass.json.screenshot)
-        subclass.
+        //subclass display properties
+        subclass.screenshot = bungieResourcePath(subclass.json.screenshot)
+        subclass.displayName = subclass.json.displayProperties.name
+        subclass.icon = bungieResourcePath(subclass.json.displayProperties.icon)
+
+        //abilities, aspects and fragments
+        subclass.abilities = {}
+        subclass.aspects = []
+        subclass.fragments = []
+
+        for (var socketKey in itemComponentsData.sockets) {
+            var socket = itemComponentsData.sockets[socketKey]
+
+            var subclassSocket = await objects.subclassSocket(socket, subclass.itemInstanceId)
+
+            if (subclassSocket) {
+                switch(subclassSocket.category) {
+                    case 'fragments':
+                        subclass.fragments.push(subclassSocket)
+                        break
+                    
+                    case 'aspects':
+                        subclass.aspects.push(subclassSocket)
+                        break
+
+                    case 'abilities':
+                        subclass.abilities[subclassSocket.abilityCategory] = subclassSocket
+                }
+            }
+        }
+
+        fulfill(subclass)
+    })
+}
+
+const abilityPlugCategoryMap = {
+    'movement': 'jump',
+    'supers': 'super',
+    'melee': 'melee',
+    'grenades': 'grenade',
+    'class_abilities': 'class_ability',
+}
+
+objects.subclassSocket = function(socketData, socketedItemId) {
+    return new Promise(async (fulfill, reject) => {
+        var subclassSocket = {}
+
+        subclassSocket.plugHash = socketData.plugHash
+        subclassSocket.isEnabled = socketData.isEnabled
+        subclassSocket.isVisible = socketData.isVisible
+        subclassSocket.socketedItemId = socketedItemId
+
+        var json = await manifest.getJSONFromHash(subclassSocket.plugHash, manifest.manifestTables.InventoryItem)
+
+        if (json) {
+            subclassSocket.json = JSON.parse(json.json)
+
+            //display properties
+            subclassSocket.displayName = subclassSocket.json.displayProperties.name
+            subclassSocket.icon = bungieResourcePath(subclassSocket.json.displayProperties.icon)
+
+            if (subclassSocket.json.traitIds && subclassSocket.json.traitIds.includes('item_type.fragment')) { //fragment
+                subclassSocket.category = 'fragments'
+            } else if (subclassSocket.json.traitIds && subclassSocket.json.traitIds.includes('item_type.aspect')) { //aspect
+                subclassSocket.category = 'aspects'
+            } else { //it's an ability
+                var plugCategory = Object.keys(abilityPlugCategoryMap).find(el => subclassSocket.json.plug.plugCategoryIdentifier.endsWith(el))
+
+                console.log(subclassSocket.json.plug.plugCategoryIdentifier)
+                console.log(plugCategory)
+
+                if (plugCategory) {
+                    subclassSocket.category = 'abilities'
+                    subclassSocket.abilityCategory = abilityPlugCategoryMap[plugCategory]
+                } else { //it's an empty fragment slot
+                    subclassSocket.category = 'fragments'
+                }
+            }
+        }
+
+        fulfill(subclassSocket)
     })
 }
 
@@ -110,7 +198,7 @@ objects.weapon = function(itemData, itemComponentsData) {
 
         //weapon display properties
         weapon.displayName = weapon.json.displayProperties.name
-        weapon.icon = icon(weapon.json.displayProperties.icon)
+        weapon.icon = bungieResourcePath(weapon.json.displayProperties.icon)
 
         //weapon perks and mods
         weapon.sockets = []
@@ -144,7 +232,7 @@ objects.weaponSocket = function(socketData, socketedItemId) {
             weaponSocket.json = JSON.parse(json.json)
 
             weaponSocket.displayName = weaponSocket.json.displayProperties.name
-            weaponSocket.icon = icon(weaponSocket.json.displayProperties.icon)
+            weaponSocket.icon = bungieResourcePath(weaponSocket.json.displayProperties.icon)
 
             fulfill(weaponSocket)
         } else {
@@ -166,7 +254,7 @@ objects.armor = function(itemData, itemComponentsData) {
 
         //armor display properties
         armor.displayName = armor.json.displayProperties.name
-        armor.icon = icon(armor.json.displayProperties.icon)
+        armor.icon = bungieResourcePath(armor.json.displayProperties.icon)
 
         //armor stats
         armor.stats = []
@@ -212,7 +300,7 @@ objects.armorMod = function(socketData, socketedItemId) {
             armorMod.json = JSON.parse(json.json)
 
             armorMod.displayName = armorMod.json.displayProperties.name
-            armorMod.icon = icon(armorMod.json.displayProperties.icon)
+            armorMod.icon = bungieResourcePath(armorMod.json.displayProperties.icon)
 
             fulfill(armorMod)
         } else {

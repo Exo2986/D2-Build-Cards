@@ -80,7 +80,55 @@ function WeaponItem(props) {
     )
 }
 
-function CardHeader() {
+function SubclassIcon(props) {
+    return (
+        <img src={props.icon_url} className='subclass-icon'/>
+    )
+}
+
+function AbilityIcon(props) {
+    return (
+        <img src={props.icon_url} className='ability-icon'/>
+    )
+}
+
+function AspectIcon(props) {
+    return (
+        <img src={props.icon_url} className='aspect-icon'/>
+    )
+}
+
+function FragmentIcon(props) {
+    return (
+        <img src={props.icon_url} className='fragment-icon'/>
+    )
+}
+
+function Subclass(props) {
+    return (
+        <Stack direction='horizontal' gap={1} id = 'card-subclass'>
+            <SubclassIcon icon_url={props.subclass.abilities.super.icon}/>
+            <Stack direction='vertical' gap={1} id='aspect-fragment-stack'>
+                <Stack direction='horizontal' gap={1} id='aspects-stack'>
+                    <AbilityIcon icon_url={props.subclass.abilities.class_ability.icon}/>
+                    <AbilityIcon icon_url={props.subclass.abilities.jump.icon}/>
+                    <AbilityIcon icon_url={props.subclass.abilities.melee.icon}/>
+                    <AbilityIcon icon_url={props.subclass.abilities.grenade.icon}/>
+                    {props.subclass.aspects.map(aspect => <AspectIcon icon_url={aspect.icon}/>)}
+                </Stack>
+                <Stack direction='horizontal' gap={1} id='fragments-stack'>
+                    {props.subclass.fragments.map(fragment => {
+                        if (fragment.isEnabled && fragment.isVisible) {
+                            return (<FragmentIcon icon_url={fragment.icon}/>)
+                        }
+                    })}
+                </Stack>
+            </Stack>
+        </Stack>
+    )
+}
+
+function CardHeader(props) {
     return (
         <Stack direction='horizontal' gap={1} id='card-header'>
             <p id='card-title'>Test</p>
@@ -96,10 +144,15 @@ function CardBody(props) {
             <div id='card-armor'>
                 {props.character.armor.map(item => <ArmorItem item={item}/>)}
             </div>
-            <div id='card-weapons'>
-                {props.character.weapons.map(item => <WeaponItem item={item}/>)}
-            </div>
-            <CharacterStats stats={props.character.stats}/>
+            <Stack direction='vertical' id='card-body-vertical'>
+                <Stack direction='horizontal' id='card-body-weapons-stats'>
+                    <div id='card-weapons'>
+                        {props.character.weapons.map(item => <WeaponItem item={item}/>)}
+                    </div>
+                    <CharacterStats stats={props.character.stats}/>
+                </Stack>
+                <Subclass subclass={props.character.subclass}/>
+            </Stack>
         </Stack>
     )
 }
