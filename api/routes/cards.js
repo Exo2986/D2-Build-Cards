@@ -18,8 +18,6 @@ var router = express.Router();
 router.use(function (req, res, next) {
     if (api.manifest) {
         next()
-    } else {
-        res.render('delayed_refresh')
     }
 })
 
@@ -41,9 +39,13 @@ router.use(async function (req, res, next) {
                 });
             }
 
-            res.redirect('/cards')
+            res.json({
+                redirect: '/cards/card'
+            })
         } else {
-            res.redirect('/auth')
+            res.json({
+                redirect: '/auth'
+            })
         }
     } else {
         next()
@@ -60,7 +62,9 @@ router.use(async function (req, res, next) {
             res.cookie('membership_id', membershipInfo.membershipId)
         }
 
-        res.redirect('/cards')
+        res.json({
+            redirect: '/cards/card'
+        })
     } else {
         next()
     }
@@ -80,19 +84,34 @@ router.get('/', async function(req, res, next){
         }
     })
     .then(function(response) {
+        var promises = []
+        var characters = []
+
         for (var character in response.data.Response.characters.data) {
             var characterData = response.data.Response.characters.data[character]
             var characterEquipment = response.data.Response.characterEquipment.data[character]
             var itemComponents = response.data.Response.itemComponents
 
-            objects.character(characterData, characterEquipment, itemComponents)
-            .then((character) => {
-                console.log(character)
-            })
+            promises.push(objects.character(characterData, characterEquipment, itemComponents)
+            .then((c) => characters.push(c)))
         }
+
+        Promise.all(promises)
+        .then(() => {
+            res.json(characters)
+        })
+        .catch(err => {
+            console.log(err)
+            res.json({
+                success: false
+            })
+        })
     })
     .catch(function(error) {
         console.log(error)
+        res.json({
+            success: false
+        })
     });
 });
 
