@@ -2,6 +2,22 @@ const manifest = require('./manifest.js')
 
 var objects = {}
 
+/*
+Subclasses are an inventory item, abilities, aspects, and fragments are all sockets in the item.
+Abilities do not have a trait id.
+Aspects have the trait id: "item_type.aspect"
+Fragments have the trait id: "item_type.fragment"
+
+Super plug category ends with supers
+Class ability plug category ends with class_abilities
+Melee plug category ends with melee
+Grenade plug category ends with grenade
+*/
+
+function icon(path) {
+    return 'https://www.bungie.net/' + path
+}
+
 objects.character = function(characterData, characterEquipment, itemComponents) {
     return new Promise(async (fulfill, reject) => {
         var character = {};
@@ -25,7 +41,7 @@ objects.character = function(characterData, characterEquipment, itemComponents) 
             var statJson = await manifest.getJSONFromHash(key, manifest.manifestTables.Stat)
             statJson = JSON.parse(statJson.json)
             var statName = statJson.displayProperties.name
-            var statIcon = statJson.displayProperties.icon
+            var statIcon = icon(statJson.displayProperties.icon)
 
             character.stats[statName] = {
                 icon: statIcon,
@@ -45,7 +61,11 @@ objects.character = function(characterData, characterEquipment, itemComponents) 
             var itemCategoryHashes = itemJson.itemCategoryHashes
 
             if (itemCategoryHashes.includes(manifest.itemCategoryHashes.weapon)) {
-                character.weapons.push(await objects.weapon(item))
+                var itemComponentsData = {
+                    sockets: itemComponents.sockets.data[item.itemInstanceId].sockets
+                }
+
+                character.weapons.push(await objects.weapon(item, itemComponentsData))
             } else if (itemCategoryHashes.includes(manifest.itemCategoryHashes.armor)) {
                 var itemComponentsData = {
                     stats: itemComponents.stats.data[item.itemInstanceId].stats,
@@ -60,7 +80,23 @@ objects.character = function(characterData, characterEquipment, itemComponents) 
     })
 }
 
-objects.weapon = function(itemData) {
+objects.subclass = function(itemData, itemComponentsData) {
+    return new Promise(async (fulfill, reject) => {
+        var subclass = {}
+
+        subclass.itemHash = itemData.itemHash
+        subclass.itemInstanceId = itemData.itemInstanceId
+
+        var json = await manifest.getJSONFromHash(subclass.itemHash, manifest.manifestTables.InventoryItem)
+
+        subclass.json = JSON.parse(json.json)
+
+        //
+        subclass.screenshot = icon(subclass.json.screenshot)
+    })
+}
+
+objects.weapon = function(itemData, itemComponentsData) {
     return new Promise(async (fulfill, reject) => {
         var weapon = {}
 
@@ -71,11 +107,48 @@ objects.weapon = function(itemData) {
 
         weapon.json = JSON.parse(json.json)
 
-        //weapon display porperties
+        //weapon display properties
         weapon.displayName = weapon.json.displayProperties.name
-        weapon.icon = weapon.json.displayProperties.icon
+        weapon.icon = icon(weapon.json.displayProperties.icon)
 
+        //weapon perks and mods
+        weapon.sockets = []
+
+        for (var socketKey in itemComponentsData.sockets) {
+            var socket = itemComponentsData.sockets[socketKey]
+
+            var weaponSocket = await objects.weaponSocket(socket, weapon.itemInstanceId)
+            if (weaponSocket) 
+                weapon.sockets.push(weaponSocket)
+        }
+        
         fulfill(weapon)
+    })
+}
+
+objects.weaponSocket = function(socketData, socketedItemId) {
+    return new Promise(async (fulfill, reject) => {
+        if (!socketData.plugHash) fulfill(false)
+
+        var weaponSocket = {}
+
+        weaponSocket.plugHash = socketData.plugHash
+        weaponSocket.isEnabled = socketData.isEnabled
+        weaponSocket.isVisible = socketData.isVisible
+        weaponSocket.socketedItemId = socketedItemId
+
+        var json = await manifest.getJSONFromHash(weaponSocket.plugHash, manifest.manifestTables.InventoryItem)
+
+        if (json) {
+            weaponSocket.json = JSON.parse(json.json)
+
+            weaponSocket.displayName = weaponSocket.json.displayProperties.name
+            weaponSocket.icon = icon(weaponSocket.json.displayProperties.icon)
+
+            fulfill(weaponSocket)
+        } else {
+            fulfill(false)
+        }
     })
 }
 
@@ -92,7 +165,7 @@ objects.armor = function(itemData, itemComponentsData) {
 
         //armor display properties
         armor.displayName = armor.json.displayProperties.name
-        armor.icon = armor.json.displayProperties.icon
+        armor.icon = icon(armor.json.displayProperties.icon)
 
         //armor stats
         armor.stats = []
@@ -138,7 +211,7 @@ objects.armorMod = function(socketData, socketedItemId) {
             armorMod.json = JSON.parse(json.json)
 
             armorMod.displayName = armorMod.json.displayProperties.name
-            armorMod.icon = armorMod.json.displayProperties.icon
+            armorMod.icon = icon(armorMod.json.displayProperties.icon)
 
             fulfill(armorMod)
         } else {
