@@ -93,6 +93,7 @@ objects.subclass = function(itemData, itemComponentsData) {
 
         //
         subclass.screenshot = icon(subclass.json.screenshot)
+        subclass.
     })
 }
 
