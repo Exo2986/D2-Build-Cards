@@ -1,16 +1,24 @@
-#main-stack {
-    max-height:95vh;
-    min-height:95vh;
-    height:95vh;
+#main {
+    max-height:100vh;
+    min-height:100vh;
+    height:100vh;
     width:100vw;
     min-width:100vw;
     max-width:100vw;
     overflow:hidden;
 }
 
-#settings-container {
-    width: 100vw;
-    min-width: 100vw;
+#settings-box {
+    border-color: white;
+    border-width: 1px;
+    border-style: solid;
+    color: rgba(20, 20, 20, 0.65);
+}
+
+.col-centered {
+    float: none !important;
+    margin: 0 auto !important;
+    padding: 0% !important;
 }
 
 #card-parent {
@@ -28,10 +36,9 @@
 }
 
 #card-scalar {
-    transform: scale(0.25);
+    transform-origin: 0 0;
     min-width: fit-content;
     min-height: fit-content;
-    align-self: center;
 }
 
 .armor-item {
