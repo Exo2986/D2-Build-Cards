@@ -1,4 +1,4 @@
-import { Stack, Container, Row, Col, Button } from "react-bootstrap"
+import { Stack, Container, Row, Col, Button, Form } from "react-bootstrap"
 import './Cards.css'
 import axios from 'axios'
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
@@ -92,6 +92,10 @@ function AbilityIcon(props) {
     )
 }
 
+function lastWord(str) {
+    return str.split(' ').pop()
+}
+
 function AspectIcon(props) {
     return (
         <img src={props.icon_url} className='aspect-icon'/>
@@ -100,7 +104,10 @@ function AspectIcon(props) {
 
 function FragmentIcon(props) {
     return (
-        <img src={props.icon_url} className='fragment-icon'/>
+        <Stack gap={1}  className='fragment-icon'>
+            <img src={props.icon_url}/>
+            <p className='text-truncate'>{props.name}</p>
+        </Stack>
     )
 }
 
@@ -119,7 +126,7 @@ function Subclass(props) {
                 <Stack direction='horizontal' gap={1} id='fragments-stack'>
                     {props.subclass.fragments.map(fragment => {
                         if (fragment.isEnabled && fragment.isVisible) {
-                            return (<FragmentIcon icon_url={fragment.icon}/>)
+                            return (<FragmentIcon icon_url={fragment.icon} name={lastWord(fragment.displayName)}/>)
                         }
                     })}
                 </Stack>
@@ -131,8 +138,8 @@ function Subclass(props) {
 function CardHeader(props) {
     return (
         <Stack direction='horizontal' gap={1} id='card-header' className='translucent-background'>
-            <p id='card-title'>Test</p>
-            <p id='card-author'>by Exo</p>
+            <p id='card-title'>{props.title}</p>
+            <p id='card-author'>by {props.author}</p>
             <p id='card-credit'>d2buildcards.com</p>
         </Stack>
     )
@@ -161,6 +168,8 @@ function Cards() {
     const cardColumn = useRef(null)
 
     const [cardColumnWidth, setCardColumnWidth] = useState(0);
+    const [cardTitle, setCardTitle] = useState('My Build');
+    const [cardAuthor, setCardAuthor] = useState('Example');
     const [character, setCharacter] = useState(false)
     const {state} = useLocation()
     const navigate = useNavigate()
@@ -225,21 +234,37 @@ function Cards() {
         }) 
     }
 
+    const updateCardTitle = (event) => {
+        setCardTitle(event.target.value)
+    }
+
+    const updateCardAuthor = (event) => {
+        setCardAuthor(event.target.value)
+    }
+
     useEffect(() => getCharacterInfo(), []) //run on mount
 
     if(character) {
         return (
             <Container fluid id='main'>
-                <Row className='w-100'>
+                <Row className='w-100 mt-5 mb-3'>
                     <div id='settings-box' className='col-6 col-centered'>
                         <Button onClick={saveAsImage}>Save as PNG</Button>
+                        <Form.Group>
+                            <Form.Label>Build Name</Form.Label>
+                            <Form.Control value={cardTitle} onChange={updateCardTitle}></Form.Control>
+                        </Form.Group>
+                        <Form.Group>
+                            <Form.Label>Author</Form.Label>
+                            <Form.Control value={cardAuthor} onChange={updateCardAuthor}></Form.Control>
+                        </Form.Group>
                     </div>
                 </Row>
-                <Row className='w-100'>
-                    <Col className='col-6 col-centered' ref={cardColumn}>
+                <Row className='w-100 p-0'>
+                    <Col className='col-6 col-centered p-0' ref={cardColumn}>
                         <div id='card-scalar' style={{'transform': `scale(${cardColumnWidth/3840})`}}>
                             <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
-                                <CardHeader/>
+                                <CardHeader author={cardAuthor} title={cardTitle}/>
                                 <CardBody character={character}/>
                             </div>
                         </div>
