@@ -59,7 +59,9 @@ function ArmorItem(props) {
                     {slottedMods.map(mod => <ModIcon icon_url={mod.icon}/>)}
                 </Stack>
             </Stack>
-            <p className='item-mods'>{slottedMods.map(mod => mod.displayName).join('\n')}</p>
+            <Stack className='item-mods'>
+                {slottedMods.map(mod => <p className='text-truncate'>{mod.displayName}</p>)}    
+            </Stack>
         </Stack>
     )
 }
