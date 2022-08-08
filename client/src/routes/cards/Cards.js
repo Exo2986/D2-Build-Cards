@@ -1,7 +1,7 @@
 import { Stack, Container, Row, Col, Button } from "react-bootstrap"
 import './Cards.css'
 import axios from 'axios'
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Link, useLocation } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import * as htmlToImage from 'html-to-image';
@@ -158,9 +158,28 @@ function CardBody(props) {
 }
 
 function Cards() {
+    const cardColumn = useRef(null)
+
+    const [cardColumnWidth, setCardColumnWidth] = useState(0);
     const [character, setCharacter] = useState(false)
     const {state} = useLocation()
     const navigate = useNavigate()
+
+    useLayoutEffect(() => {
+        if (character) {
+            setCardColumnWidth(cardColumn.current.clientWidth)
+
+            function handleWindowResize() {
+                setCardColumnWidth(cardColumn.current.clientWidth)
+            }
+
+            window.addEventListener('resize', handleWindowResize);
+
+            return () => {
+                window.removeEventListener('resize', handleWindowResize);
+            };
+        }
+    }, [character]);
 
     const charClass = state.charClass
 
@@ -210,23 +229,23 @@ function Cards() {
 
     if(character) {
         return (
-            <>
-                <Container className='justify-content-center' id='settings-container'>
-                    <Row className='align-self-center'>
-                        <Col xs={2}>
-                            <Button onClick={saveAsImage}>Save as PNG</Button>
-                        </Col>
-                    </Row>
-                </Container>
-                <Stack className='justify-content-center' id='main-stack'>
-                    <div id='card-scalar'>
-                        <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
-                            <CardHeader/>
-                            <CardBody character={character}/>
-                        </div>
+            <Container fluid id='main'>
+                <Row className='w-100'>
+                    <div id='settings-box' className='col-6 col-centered'>
+                        <Button onClick={saveAsImage}>Save as PNG</Button>
                     </div>
-                </Stack>
-            </>
+                </Row>
+                <Row className='w-100'>
+                    <Col className='col-6 col-centered' ref={cardColumn}>
+                        <div id='card-scalar' style={{'transform': `scale(${cardColumnWidth/3840})`}}>
+                            <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
+                                <CardHeader/>
+                                <CardBody character={character}/>
+                            </div>
+                        </div>
+                    </Col>
+                </Row>
+            </Container>
         )
     } else {
         return (<h1>Loading</h1>)
