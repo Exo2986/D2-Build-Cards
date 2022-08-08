@@ -15,10 +15,11 @@ function Callback() {
                 code: code
             }
         })
-        .then((res) => {
-            navigate('/auth')
+        .then(() => {
+            navigate('/cards')
         })
         .catch((err) => {
+            console.log(err)
             navigate('/auth')
         })
     }

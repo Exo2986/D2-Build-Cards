@@ -1,9 +1,11 @@
-import { Stack, Ratio, Row } from "react-bootstrap"
+import { Stack, Container, Row, Col, Button } from "react-bootstrap"
 import './Cards.css'
 import axios from 'axios'
-import { useEffect, useState } from "react"
-import { useLocation } from 'react-router-dom'
+import { useEffect, useRef, useState } from "react"
+import { Link, useLocation } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
+import * as htmlToImage from 'html-to-image';
+import download from 'downloadjs';
 
 function ModIcon(props) {
     return (
@@ -49,7 +51,7 @@ function ArmorItem(props) {
     const slottedMods = props.item.sockets.filter(socket => socket.json.itemCategoryHashes.includes(4104513227))
 
     return (
-        <Stack direction='horizontal' gap={1} className='armor-item'>
+        <Stack direction='horizontal' gap={1} className='armor-item translucent-background'>
             <ItemIcon icon_url={props.item.icon}/>
             <Stack gap={0}>
                 <p className='item-name'>{props.item.displayName}</p>
@@ -57,23 +59,19 @@ function ArmorItem(props) {
                     {slottedMods.map(mod => <ModIcon icon_url={mod.icon}/>)}
                 </Stack>
             </Stack>
+            <p className='item-mods'>{slottedMods.map(mod => mod.displayName).join('\n')}</p>
         </Stack>
     )
 }
 
 function WeaponItem(props) {
-    //610365472 is for weapon perks and mods, 2237038328 is for intrinsic perks such as weapon frames
-    const weaponPerks = props.item.sockets.filter(socket => {
-        return socket.json.itemCategoryHashes.includes(610365472) && !socket.json.itemCategoryHashes.includes(2237038328)
-    })
-
     return (
-        <Stack direction='horizontal' gap={1} className='weapon-item'>
+        <Stack direction='horizontal' gap={1} className='weapon-item translucent-background'>
             <ItemIcon icon_url={props.item.icon}/>
             <Stack gap={0}>
                 <p className='item-name'>{props.item.displayName}</p>
                 <Stack direction='horizontal' gap={1} className='perk-icon-stack'>
-                    {weaponPerks.map(perk => <WeaponPerkIcon icon_url={perk.icon}/>)}
+                    {props.item.perks.map(perk => <WeaponPerkIcon icon_url={perk.icon}/>)}
                 </Stack>
             </Stack>
         </Stack>
@@ -106,7 +104,7 @@ function FragmentIcon(props) {
 
 function Subclass(props) {
     return (
-        <Stack direction='horizontal' gap={1} id = 'card-subclass'>
+        <Stack direction='horizontal' gap={1} id='card-subclass' className='translucent-background'>
             <SubclassIcon icon_url={props.subclass.abilities.super.icon}/>
             <Stack direction='vertical' gap={1} id='aspect-fragment-stack'>
                 <Stack direction='horizontal' gap={1} id='aspects-stack'>
@@ -130,7 +128,7 @@ function Subclass(props) {
 
 function CardHeader(props) {
     return (
-        <Stack direction='horizontal' gap={1} id='card-header'>
+        <Stack direction='horizontal' gap={1} id='card-header' className='translucent-background'>
             <p id='card-title'>Test</p>
             <p id='card-author'>by Exo</p>
             <p id='card-credit'>d2buildcards.com</p>
@@ -170,10 +168,10 @@ function Cards() {
         axios.get('/cards')
         .then(res => {
             console.log(res)
-            if (res.data.redirect) {
-                navigate(res.data.redirect, {
-                    state: state
-                })
+            if (res.data.refresh) {
+                navigate(0)
+            } else if ('authenticated' in res.data) {
+                navigate('../../auth')
             } else {
                 var charResult = res.data.find(obj => {
                     return obj.class == charClass
@@ -192,16 +190,41 @@ function Cards() {
         })
     }
 
+    const cardParent = useRef(null)
+
+    const saveAsImage = () => {
+        console.log('clicked')
+        htmlToImage.toPng(cardParent.current)
+        .then(dataUrl => {
+            console.log('downloading')
+            download(dataUrl, 'my_build_card.png')
+        })
+        .catch(err => {
+            console.log(err)
+        }) 
+    }
+
     useEffect(() => getCharacterInfo(), []) //run on mount
 
     if(character) {
         return (
-            <Stack className='justify-content-center' id='main-stack'>
-                <div id='card-parent'>
-                    <CardHeader/>
-                    <CardBody character={character}/>
-                </div>
-            </Stack>
+            <>
+                <Container className='justify-content-center' id='settings-container'>
+                    <Row className='align-self-center'>
+                        <Col xs={2}>
+                            <Button onClick={saveAsImage}>Save as PNG</Button>
+                        </Col>
+                    </Row>
+                </Container>
+                <Stack className='justify-content-center' id='main-stack'>
+                    <div id='card-scalar'>
+                        <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
+                            <CardHeader/>
+                            <CardBody character={character}/>
+                        </div>
+                    </div>
+                </Stack>
+            </>
         )
     } else {
         return (<h1>Loading</h1>)
