@@ -76,10 +76,14 @@
 }
 
 .item-mods {
-    font-size: 25pt;
+    font-size: 30pt;
     white-space: pre-line;
+    overflow: hidden;
+    display:  block;
     margin-top: auto;
     text-align: right;
+    margin-left: 2%;
+    margin-bottom: 2%;
 }
 
 .mod-icon-stack {
