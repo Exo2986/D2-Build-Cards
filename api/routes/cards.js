@@ -40,11 +40,11 @@ router.use(async function (req, res, next) {
             }
 
             res.json({
-                redirect: '/cards/card'
+                refresh: true
             })
         } else {
             res.json({
-                redirect: '/auth'
+                authenticated: false
             })
         }
     } else {
@@ -63,7 +63,7 @@ router.use(async function (req, res, next) {
         }
 
         res.json({
-            redirect: '/cards/card'
+            refresh: true
         })
     } else {
         next()

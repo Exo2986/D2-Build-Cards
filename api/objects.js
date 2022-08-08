@@ -169,9 +169,6 @@ objects.subclassSocket = function(socketData, socketedItemId) {
             } else { //it's an ability
                 var plugCategory = Object.keys(abilityPlugCategoryMap).find(el => subclassSocket.json.plug.plugCategoryIdentifier.endsWith(el))
 
-                console.log(subclassSocket.json.plug.plugCategoryIdentifier)
-                console.log(plugCategory)
-
                 if (plugCategory) {
                     subclassSocket.category = 'abilities'
                     subclassSocket.abilityCategory = abilityPlugCategoryMap[plugCategory]
@@ -201,14 +198,52 @@ objects.weapon = function(itemData, itemComponentsData) {
         weapon.icon = bungieResourcePath(weapon.json.displayProperties.icon)
 
         //weapon perks and mods
-        weapon.sockets = []
+        var sockets = []
 
         for (var socketKey in itemComponentsData.sockets) {
             var socket = itemComponentsData.sockets[socketKey]
 
             var weaponSocket = await objects.weaponSocket(socket, weapon.itemInstanceId)
             if (weaponSocket) 
-                weapon.sockets.push(weaponSocket)
+                sockets.push(weaponSocket)
+        }
+
+        weapon.perks = []
+
+        //this is a list of indexes of perk category hashes, we only want the perks matching this list
+        var perkSocketIndexes = weapon.json.sockets.socketCategories[1].socketIndexes
+
+        //this is the list that the indexes point to.
+        var socketEntries = weapon.json.sockets.socketEntries
+
+        //here we translate the indexes to their values by mapping the array
+        var perkSocketTypeHashes = perkSocketIndexes.map(index => socketEntries[index].socketTypeHash)
+
+        //now we want to query the manifest table for the json information associated with each of these socket type hashes
+        var perkSocketTypes = perkSocketTypeHashes.map(hash => manifest.getJSONFromHash(hash, manifest.manifestTables.SocketType))
+        var perkSocketTypes = await Promise.all(perkSocketTypes)
+
+        perkSocketTypes = perkSocketTypes.map(res => JSON.parse(res.json))
+
+        //every socket has a plugCategoryHash under socket.json.plug. Every socket type definition has a whitelist of allowed plugCategoryHashes.
+        //Here we just check if each plugCategoryHash is contained somewhere in perkSocketTypes. If it is, then we keep it.
+        for (var socket of sockets) {
+            var plugCategoryHash = socket.json.plug.plugCategoryHash
+
+            for (var socketType of perkSocketTypes) {
+                var whitelist = socketType.plugWhitelist
+                var found = false
+
+                for (var item of whitelist) {
+                    if (item.categoryHash == plugCategoryHash && plugCategoryHash != 2947756142) { //2947756142 is kill trackers, we don't need that
+                        weapon.perks.push(socket)
+                        found = true
+                        break
+                    }
+                }
+
+                if (found) break
+            }
         }
         
         fulfill(weapon)
