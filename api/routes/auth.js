@@ -1,6 +1,8 @@
 var express = require('express');
 var axios = require('axios').default;
 var config = require('./../config.js');
+const winston = require('winston')
+const logger = winston.child({service: 'auth'})
 
 var router = express.Router();
 
@@ -36,11 +38,9 @@ router.get('/callback', async function(req, res, next) {
         res.json({
             success: true,
         })
-
-        console.log('hello')
     })
     .catch(function(error) {
-        console.log(error)
+        logger.error(error)
     });
 });
 

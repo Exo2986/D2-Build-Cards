@@ -4,10 +4,12 @@ var https = require('https');
 var fs = require('fs');
 var path = require('path');
 var cookieParser = require('cookie-parser');
-var logger = require('morgan');
 var cors = require('cors')
 var config = require('./config.js');
 var api = require('./api.js')
+const winston = require('winston')
+const morgan = require('morgan')
+require('winston-daily-rotate-file')
 
 var key = fs.readFileSync('./../certs/cert.key');
 var cert = fs.readFileSync('./../certs/cert.pem');
@@ -28,15 +30,85 @@ var app = express();
 
 app.use(cors())
 
+
+//logging setup
+var transport = new winston.transports.DailyRotateFile({
+  filename: 'application-%DATE%.log',
+  datePattern: 'YYYY-MM-DD-HH',
+  maxSize: '20m',
+  maxFiles: '14d'
+})
+
+var errTransport = new winston.transports.DailyRotateFile({
+  level: 'error',
+  filename: 'application-error-%DATE%.log',
+  datePattern: 'YYYY-MM-DD-HH',
+  maxSize: '20m',
+  maxFiles: '14d'
+})
+
+var rejectionTransport = new winston.transports.DailyRotateFile({
+  level: 'error',
+  filename: 'application-rejection-%DATE%.log',
+  datePattern: 'YYYY-MM-DD-HH',
+  maxSize: '20m',
+  maxFiles: '14d'
+})
+
+winston.configure({
+  level: 'debug',
+  transports: [
+    transport
+  ],
+  exceptionHandlers: [
+    errTransport
+  ],
+  rejectionHandlers: [
+    rejectionTransport
+  ],
+  format: winston.format.combine(winston.format.timestamp(), winston.format.json(), winston.format.splat()),
+  defaultMeta: {
+    service: 'domain'
+  }
+})
+
+winston.add(new winston.transports.Console({
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.simple()
+  )
+}));
+
+const morganMiddleware = morgan(
+  function (tokens, req, res) {
+    return JSON.stringify({
+      method: tokens.method(req, res),
+      url: tokens.url(req, res),
+      status: Number.parseFloat(tokens.status(req, res)),
+      content_length: tokens.res(req, res, 'content-length'),
+      response_time: Number.parseFloat(tokens['response-time'](req, res)),
+    });
+  },
+  {
+    stream: {
+      write: (message) => {
+        const data = JSON.parse(message);
+        winston.http(`incoming-request`, data);
+      },
+    },
+  }
+);
+
+app.use(morganMiddleware)
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(express.static(path.join(__dirname, "node_modules/bootstrap/dist/")))
 app.use(express.static(path.join(__dirname, "node_modules/jquery/dist/")))
-app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(config.cookie_secret, {
   httpOnly: true,
   secure: true

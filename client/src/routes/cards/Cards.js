@@ -60,7 +60,7 @@ function ArmorItem(props) {
                 </Stack>
             </Stack>
             <Stack className='item-mods'>
-                {slottedMods.map(mod => <p className='text-truncate'>{mod.displayName}</p>)}    
+                {slottedMods.slice(1).map(mod => <p className='text-truncate'>{mod.displayName}</p>)}    
             </Stack>
         </Stack>
     )

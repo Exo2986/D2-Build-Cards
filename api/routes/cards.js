@@ -4,6 +4,8 @@ var config = require('./../config.js');
 var manifest = require('./../manifest.js')
 var objects = require('./../objects.js')
 var api = require('./../api.js')
+const winston = require('winston')
+const logger = winston.child({service: 'cards'})
 
 const instance = axios.create({
     baseURL: config.d2_api_base_url,
@@ -18,6 +20,8 @@ var router = express.Router();
 router.use(function (req, res, next) {
     if (api.manifest) {
         next()
+    } else {
+        logger.warn('Denied request, manifest.db is not connected.')
     }
 })
 
@@ -101,14 +105,14 @@ router.get('/', async function(req, res, next){
             res.json(characters)
         })
         .catch(err => {
-            console.log(err)
+            logger.error(err)
             res.json({
                 success: false
             })
         })
     })
     .catch(function(error) {
-        console.log(error)
+        logger.error(error)
         res.json({
             success: false
         })
