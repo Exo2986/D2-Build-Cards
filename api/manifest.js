@@ -1,6 +1,8 @@
 const sqlite3 = require('sqlite3').verbose()
 const path = require('path')
 const { open } = require('sqlite')
+const winston = require('winston')
+const logger = winston.child({service: 'manifest'})
 
 var manifest = {}
 
@@ -57,9 +59,16 @@ manifest.idFromHash = function(hash) {
 
 manifest.getJSONFromHash = function(hash, table) {
     if (!manifest.connected) throw new Error('Database not connected to manifest.db')
-
+    
     var id = manifest.idFromHash(hash)
-    var result = manifest.db.get(`SELECT json FROM ${table} WHERE id = ${id}`)
+    var query = `SELECT json FROM ${table} WHERE id = ${id}`
+
+    logger.info({
+        message: 'Querying manifest.db',
+        query: query
+    })
+
+    var result = manifest.db.get(query)
 
     return result
 }
@@ -70,7 +79,7 @@ manifest.openDatabaseConnection = function() {
         driver: sqlite3.Database
     })
     .then((db) => {
-        console.log('database connection established')
+        logger.info('Successfully established connection to manifest.db')
         manifest.db = db
         manifest.connected = true
     })

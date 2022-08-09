@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": ".c6e6a6feb23a8482de4025c470ef4f8b97144c3e-audit.json",
+    "files": [
+        {
+            "date": 1660069196971,
+            "name": "application-rejection-2022-08-09-14.log",
+            "hash": "d30bad2305c94b307a5e5be4c87d11befff1257a8b0e912088fdc668b08f7f24"
+        }
+    ],
+    "hashType": "sha256"
+}

@@ -4,6 +4,8 @@ var extract = require('extract-zip')
 var path = require('path')
 var manifest = require('./manifest.js')
 var fs = require('fs')
+const winston = require('winston')
+const logger = winston.child({service: 'api'})
 
 var api = {}
 
@@ -38,7 +40,7 @@ api.refreshAccessToken = async function (refreshToken) {
         };
     })
     .catch(function(error) {
-        console.log(error)
+        logger.error(error)
     });
 
     return returnInfo;
@@ -57,16 +59,23 @@ api.getUserMembershipInfo = async function (accessToken) {
             membershipType: response.data.Response.destinyMemberships[0].membershipType,
             membershipId: response.data.Response.destinyMemberships[0].membershipId
         }
+
+        logger.info({
+            message: 'Retrieved membership info',
+            ...membershipInfo
+        })
     })
     .catch(function (error) {
-        console.log(error)
+        logger.error(error)
     })
 
     return membershipInfo;
 }
 
 api.getManifest = function () {
-    deleteOldManifest()
+    var success = deleteOldManifest()
+
+    if (!success) return
 
     instance.get('/Destiny2/Manifest/')
     .then(function(response) {
@@ -83,16 +92,16 @@ api.getManifest = function () {
                     manifest.openDatabaseConnection()
                     
                     api.manifest = true
-                    console.log('manifest acquired')
+                    logger.info('Successfully acquired manifest from %s', manifest_url)
                 })
             })
         })
         .catch(function(error) {
-            console.log(error)
+            logger.error(error)
         })
     })
     .catch(function(error) {
-        console.log(error);
+        logger.error(error)
     });
 }
 
@@ -120,7 +129,7 @@ async function unzipManifest() {
 
             fulfill()
         } catch(err) {
-            console.log(err)
+            logger.error(error)
         }
 
         reject()
@@ -134,23 +143,30 @@ function renameManifestDatabase() {
     files.forEach(file => fs.renameSync(
         manifestPath + `/${file}`,
         manifestPath + '/manifest.db',
-        err => console.log(err)
+        err => logger.error(err)
     ))
 }
 
 function deleteOldManifest() {
     var manifestPath = path.resolve('./manifest');
-    fs.access(manifestPath, (err) => {
-        if (!err) {
-            var files = fs.readdirSync(manifestPath)
+    try {
+        fs.access(manifestPath, (err) => {
+            if (!err) {
+                var files = fs.readdirSync(manifestPath)
+    
+                files.forEach(file => {
+                    if (file.endsWith('.db') || file.endsWith('.content')) {
+                        fs.unlinkSync(manifestPath + `/${file}`)
+                    }
+                })
+            }
+        })
+    } catch (err) {
+        logger.error(err)
+        return false
+    }
 
-            files.forEach(file => {
-                if (file.endsWith('.db') || file.endsWith('.content')) {
-                    fs.unlinkSync(manifestPath + `/${file}`)
-                }
-            })
-        }
-    })
+    return true
 }
 
 module.exports = api;

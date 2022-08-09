@@ -18,6 +18,8 @@
     "morgan": "~1.9.1",
     "pug": "^3.0.2",
     "sqlite": "^4.1.2",
-    "sqlite3": "^5.0.10"
+    "sqlite3": "^5.0.10",
+    "winston": "^3.8.1",
+    "winston-daily-rotate-file": "^4.7.1"
   }
 }
