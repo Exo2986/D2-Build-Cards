@@ -6,6 +6,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import * as htmlToImage from 'html-to-image';
 import download from 'downloadjs';
+import useFitText from "use-fit-text"
 
 function ModIcon(props) {
     return (
@@ -71,7 +72,7 @@ function WeaponItem(props) {
         <Stack direction='horizontal' gap={1} className='weapon-item translucent-background'>
             <ItemIcon icon_url={props.item.icon}/>
             <Stack gap={0}>
-                <p className='item-name'>{props.item.displayName}</p>
+                <p className='item-name text-truncate'>{props.item.displayName}</p>
                 <Stack direction='horizontal' gap={1} className='perk-icon-stack'>
                     {props.item.perks.map(perk => <WeaponPerkIcon icon_url={perk.icon}/>)}
                 </Stack>
@@ -136,10 +137,18 @@ function Subclass(props) {
 }
 
 function CardHeader(props) {
+    const titleFitText = useFitText({maxFontSize:1500})
+    const titleFontSize = titleFitText.fontSize
+    const authorFitText = useFitText({maxFontSize:1000})
+    const authorFontSize = authorFitText.fontSize
+
+    console.log(titleFitText)
+    console.log(titleFontSize)
+
     return (
         <Stack direction='horizontal' gap={1} id='card-header' className='translucent-background'>
-            <p id='card-title'>{props.title}</p>
-            <p id='card-author'>by {props.author}</p>
+            <p id='card-title' style={{fontSize: titleFontSize}} ref={titleFitText.ref}>{props.title}</p>
+            <p id='card-author' style={{fontSize: authorFontSize}} ref={authorFitText.ref}>by {props.author}</p>
             <p id='card-credit'>d2buildcards.com</p>
         </Stack>
     )
@@ -209,9 +218,6 @@ function Cards() {
     
                 if(charResult) {
                     setCharacter(charResult)
-                    console.log('yay')
-                } else {
-                    console.log('uh oh')
                 }
             }
         })
@@ -226,7 +232,6 @@ function Cards() {
         console.log('clicked')
         htmlToImage.toPng(cardParent.current)
         .then(dataUrl => {
-            console.log('downloading')
             download(dataUrl, 'my_build_card.png')
         })
         .catch(err => {

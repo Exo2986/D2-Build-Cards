@@ -6,7 +6,7 @@ const logger = winston.child({service: 'manifest'})
 
 var manifest = {}
 
-manifest.connected = () => manifest.db == null
+manifest.connected = () => manifest.db != null
 
 manifest.itemCategoryHashes = {
     weapon: 1,
