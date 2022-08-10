@@ -150,14 +150,13 @@ server.on('uncaughtException', function(err) {
 
 const getManifest = () => {
   api.getManifest()
-  .then((success) => {
-    if (success)
-      manifest.openDatabaseConnection()
+  .then(() => {
+    manifest.openDatabaseConnection()
   })
   .catch(() => {
     //start a panic interval, check for manifest updates much more frequently
     winston.info('Starting panic interval, checking for manifest updates every 15 minutes.')
-    setTimeout(getManifest, 1000 * 60 * 15)
+    setTimeout(getManifest, 1000 * 60)
   })
 }
 

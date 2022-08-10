@@ -18,7 +18,7 @@ var router = express.Router();
 
 //make sure that manifest is present
 router.use(function (req, res, next) {
-    logger.info('Manifest connection verification middleware called.')
+    logger.verbose('Manifest connection verification middleware called for %s', res.ip)
     if (manifest.connected()) {
         next()
     } else {
@@ -30,7 +30,7 @@ router.use(function (req, res, next) {
 
 //make sure that token cookies are present
 router.use(async function (req, res, next) {
-    logger.info('Token cookie verification middleware called.')
+    logger.verbose('Token cookie verification middleware called for %s', res.ip)
     if (!req.signedCookies['access_token']) {
         if (req.signedCookies['refresh_token']) {
             response = await api.refreshAccessToken(req.signedCookies['refresh_token']);
@@ -69,7 +69,7 @@ router.use(async function (req, res, next) {
 
 //make sure that membership cookies are present, create them if not
 router.use(async function (req, res, next) {
-    logger.info('Membership cookie verification middleware called.')
+    logger.verbose('Membership cookie verification middleware called for %s', res.ip)
     if (!req.cookies['membership_type'] || !req.cookies['membership_id']) {
         var membershipInfo = await api.getUserMembershipInfo(req.signedCookies['access_token']);
 
@@ -98,7 +98,7 @@ router.get('/', async function(req, res, next){
     var membershipId = req.cookies['membership_id']
     var accessToken = req.signedCookies['access_token']
 
-    const profiler = `Retrieve profile info for user ${membershipId}`
+    const profiler = `Retrieve profile info for user ${membershipId} (${res.ip})`
     logger.profile(profiler)
 
     instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}`, {
