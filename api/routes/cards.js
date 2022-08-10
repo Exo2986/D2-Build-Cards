@@ -1,5 +1,6 @@
 var express = require('express');
 var axios = require('axios').default;
+var config = require('./../config.js');
 var manifest = require('./../manifest.js')
 var objects = require('./../objects.js')
 var api = require('./../api.js')
@@ -7,9 +8,9 @@ const winston = require('winston')
 const logger = winston.child({service: 'cards'})
 
 const instance = axios.create({
-    baseURL: process.env.d2_api_base_url,
+    baseURL: config.d2_api_base_url,
     headers: {
-        'X-Api-Key': process.env.d2_api_key
+        'X-Api-Key': config.d2_api_key
     }
 })
 

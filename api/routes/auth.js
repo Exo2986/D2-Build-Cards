@@ -1,5 +1,6 @@
 var express = require('express');
 var axios = require('axios').default;
+var config = require('./../config.js');
 const winston = require('winston')
 const logger = winston.child({service: 'auth'})
 
@@ -7,7 +8,7 @@ var router = express.Router();
 
 router.get('/', function(req, res, next) {
     res.json({
-        url: process.env.d2_auth_base_url + `?client_id=${process.env.d2_client_id}&response_type=code`
+        url: config.d2_auth_base_url + `?client_id=${config.d2_client_id}&response_type=code`
     })
 });
 
@@ -16,11 +17,11 @@ router.get('/callback', async function(req, res, next) {
 
     await axios({
         method: 'post',
-        url: process.env.d2_token_base_url,
+        url: config.d2_token_base_url,
         data: `grant_type=authorization_code&code=${code}`,
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${Buffer.from(`${process.env.d2_client_id}:${process.env.d2_client_secret}`).toString('base64')}`
+            'Authorization': `Basic ${Buffer.from(`${config.d2_client_id}:${config.d2_client_secret}`).toString('base64')}`
         }
     })
     .then(function(response) {
