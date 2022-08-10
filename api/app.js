@@ -5,7 +5,6 @@ var fs = require('fs');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var cors = require('cors')
-var config = require('./config.js');
 var api = require('./api.js')
 const winston = require('winston')
 const morgan = require('morgan')
@@ -108,7 +107,7 @@ app.use(express.static(path.join(__dirname, "node_modules/bootstrap/dist/")))
 app.use(express.static(path.join(__dirname, "node_modules/jquery/dist/")))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser(config.cookie_secret, {
+app.use(cookieParser(process.env.cookie_secret, {
   httpOnly: true,
   secure: true
 }));
