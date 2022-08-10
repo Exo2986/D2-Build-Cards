@@ -1,5 +1,4 @@
 var axios = require('axios').default;
-var config = require('./config.js');
 var extract = require('extract-zip')
 var path = require('path')
 var manifest = require('./manifest.js')
@@ -15,9 +14,9 @@ api.manifestInfo = {
 }
 
 const instance = axios.create({
-    baseURL: config.d2_api_base_url,
+    baseURL: process.env.d2_api_base_url,
     headers: {
-        'X-Api-Key': config.d2_api_key
+        'X-Api-Key': process.env.d2_api_key
     }
 })
 
@@ -25,11 +24,11 @@ api.refreshAccessToken = async function (refreshToken) {
     var returnInfo = {};
     await axios({
         method: 'post',
-        url: config.d2_token_base_url,
+        url: process.env.d2_token_base_url,
         data: `grant_type=refresh_token&refresh_token=${refreshToken}`,
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${Buffer.from(`${config.d2_client_id}:${config.d2_client_secret}`).toString('base64')}`
+            'Authorization': `Basic ${Buffer.from(`${process.env.d2_client_id}:${process.env.d2_client_secret}`).toString('base64')}`
         },
     })
     .then(function(response) {
@@ -105,7 +104,7 @@ api.getManifest = function () {
                     .then(() => {
                         renameManifestDatabase()
                         updateManifestInfoFile(manifestPath)
-                        
+
                         logger.info('Successfully acquired manifest from %s', manifestUrl)
                         fulfill(true)
                     })
