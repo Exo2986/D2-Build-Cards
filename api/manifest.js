@@ -6,6 +6,8 @@ const logger = winston.child({service: 'manifest'})
 
 var manifest = {}
 
+manifest.connected = () => manifest.db == null
+
 manifest.itemCategoryHashes = {
     weapon: 1,
     armor: 20
@@ -58,7 +60,7 @@ manifest.idFromHash = function(hash) {
 }
 
 manifest.getJSONFromHash = function(hash, table) {
-    if (!manifest.connected) throw new Error('Database not connected to manifest.db')
+    if (!manifest.connected()) throw new Error('Database not connected to manifest.db')
     
     var id = manifest.idFromHash(hash)
     var query = `SELECT json FROM ${table} WHERE id = ${id}`
@@ -74,20 +76,21 @@ manifest.getJSONFromHash = function(hash, table) {
 }
 
 manifest.openDatabaseConnection = function() {
+    const profiler = 'Establish connection to manifest.db'
+    logger.profile(profiler)
     open({
         filename: './manifest/manifest.db',
         driver: sqlite3.Database
     })
     .then((db) => {
-        logger.info('Successfully established connection to manifest.db')
+        logger.profile(profiler)
         manifest.db = db
-        manifest.connected = true
     })
 }
 
 manifest.closeDatabaseConnection = function() {
-    manifest.db.close()
-    manifest.connected = false
+    logger.info('Closing database connection')
+    if (manifest.db) manifest.db.close()
 }
 
 module.exports = manifest

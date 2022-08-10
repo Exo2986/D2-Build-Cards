@@ -25,6 +25,8 @@ var options = {
 
 var authRouter = require('./routes/auth');
 var cardsRouter = require('./routes/cards');
+const manifest = require('./manifest.js');
+const { loggers } = require('winston');
 
 var app = express();
 
@@ -33,7 +35,7 @@ app.use(cors())
 
 //logging setup
 var transport = new winston.transports.DailyRotateFile({
-  filename: 'application-%DATE%.log',
+  filename: 'logs/application-%DATE%.log',
   datePattern: 'YYYY-MM-DD-HH',
   maxSize: '20m',
   maxFiles: '14d'
@@ -41,7 +43,7 @@ var transport = new winston.transports.DailyRotateFile({
 
 var errTransport = new winston.transports.DailyRotateFile({
   level: 'error',
-  filename: 'application-error-%DATE%.log',
+  filename: 'logs/application-error-%DATE%.log',
   datePattern: 'YYYY-MM-DD-HH',
   maxSize: '20m',
   maxFiles: '14d'
@@ -49,7 +51,7 @@ var errTransport = new winston.transports.DailyRotateFile({
 
 var rejectionTransport = new winston.transports.DailyRotateFile({
   level: 'error',
-  filename: 'application-rejection-%DATE%.log',
+  filename: 'logs/application-rejection-%DATE%.log',
   datePattern: 'YYYY-MM-DD-HH',
   maxSize: '20m',
   maxFiles: '14d'
@@ -66,10 +68,7 @@ winston.configure({
   rejectionHandlers: [
     rejectionTransport
   ],
-  format: winston.format.combine(winston.format.timestamp(), winston.format.json(), winston.format.splat()),
-  defaultMeta: {
-    service: 'domain'
-  }
+  format: winston.format.combine(winston.format.timestamp(), winston.format.json(), winston.format.splat())
 })
 
 winston.add(new winston.transports.Console({
@@ -149,9 +148,24 @@ server.on('uncaughtException', function(err) {
   console.log(err);
 });
 
+const getManifest = () => {
+  api.getManifest()
+  .then((success) => {
+    if (success)
+      manifest.openDatabaseConnection()
+  })
+  .catch(() => {
+    //start a panic interval, check for manifest updates much more frequently
+    winston.info('Starting panic interval, checking for manifest updates every 15 minutes.')
+    setTimeout(getManifest, 1000 * 60 * 15)
+  })
+}
+
 server.listen(port, () => {
-  api.getManifest();
-  console.log(`Listening on port ${port}`);
+  getManifest()
+  setInterval(getManifest, 1000 * 60 * 60 * 24) //run every 24 hours
+
+  winston.info(`Listening on port ${port}`);
 });
 
 module.exports = app;

@@ -18,15 +18,19 @@ var router = express.Router();
 
 //make sure that manifest is present
 router.use(function (req, res, next) {
-    if (api.manifest) {
+    logger.info('Manifest connection verification middleware called.')
+    if (manifest.connected()) {
         next()
     } else {
-        logger.warn('Denied request, manifest.db is not connected.')
+        const error = 'Denied request, manifest.db is not connected.'
+        logger.warn(error)
+        throw new Error(error)
     }
 })
 
 //make sure that token cookies are present
 router.use(async function (req, res, next) {
+    logger.info('Token cookie verification middleware called.')
     if (!req.signedCookies['access_token']) {
         if (req.signedCookies['refresh_token']) {
             response = await api.refreshAccessToken(req.signedCookies['refresh_token']);
@@ -41,6 +45,13 @@ router.use(async function (req, res, next) {
                     maxAge: response.refresh_token.expires_in * 1000,
                     signed: true
                 });
+            } else {
+                var error = 'Unable to consume refresh token at Bungie.net'
+                logger.error({
+                    message: error,
+                    ip: req.ip
+                })
+                next(error)
             }
 
             res.json({
@@ -58,12 +69,20 @@ router.use(async function (req, res, next) {
 
 //make sure that membership cookies are present, create them if not
 router.use(async function (req, res, next) {
-    if (!req.cookies['membership_type']) {
+    logger.info('Membership cookie verification middleware called.')
+    if (!req.cookies['membership_type'] || !req.cookies['membership_id']) {
         var membershipInfo = await api.getUserMembershipInfo(req.signedCookies['access_token']);
 
         if (membershipInfo != null) {
             res.cookie('membership_type', membershipInfo.membershipType)
             res.cookie('membership_id', membershipInfo.membershipId)
+        } else {
+            const error = 'Unable to retrieve membership info from Bungie.net'
+            logger.error({
+                message: error,
+                ip: req.ip
+            })
+            throw new Error(error)
         }
 
         res.json({
@@ -78,6 +97,9 @@ router.get('/', async function(req, res, next){
     var membershipType = req.cookies['membership_type']
     var membershipId = req.cookies['membership_id']
     var accessToken = req.signedCookies['access_token']
+
+    const profiler = `Retrieve profile info for user ${membershipId}`
+    logger.profile(profiler)
 
     instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}`, {
         headers: {
@@ -103,19 +125,22 @@ router.get('/', async function(req, res, next){
         Promise.all(promises)
         .then(() => {
             res.json(characters)
+            logger.profile(profiler)
         })
         .catch(err => {
-            logger.error(err)
-            res.json({
-                success: false
+            logger.error({
+                message: err,
+                ip: req.ip
             })
+            next(err)
         })
     })
     .catch(function(error) {
-        logger.error(error)
-        res.json({
-            success: false
+        logger.error({
+            message: error,
+            ip: req.ip
         })
+        next(error)
     });
 });
 
