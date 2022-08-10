@@ -40,7 +40,11 @@ router.get('/callback', async function(req, res, next) {
         })
     })
     .catch(function(error) {
-        logger.error(error)
+        res.status(500)
+        logger.error({
+            message: error,
+            ip: req.ip
+        })
     });
 });
 

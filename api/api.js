@@ -9,6 +9,11 @@ const logger = winston.child({service: 'api'})
 
 var api = {}
 
+api.manifestInfo = {
+    fileName: '',
+    lastChecked: 0
+}
+
 const instance = axios.create({
     baseURL: config.d2_api_base_url,
     headers: {
@@ -73,36 +78,53 @@ api.getUserMembershipInfo = async function (accessToken) {
 }
 
 api.getManifest = function () {
-    var success = deleteOldManifest()
-
-    if (!success) return
-
-    instance.get('/Destiny2/Manifest/')
-    .then(function(response) {
-        manifest_path = response.data.Response.mobileWorldContentPaths.en
-        manifest_url = `http://www.bungie.net${manifest_path}`
-        instance.get(manifest_url, {responseType: 'stream'})
+    return new Promise(async (fulfill, reject) => {
+        instance.get('/Destiny2/Manifest/')
         .then(function(response) {
-            downloadManifest(response)
-            .then(() => {
-                unzipManifest()
-                .then(() => {
-                    renameManifestDatabase()
+            var manifestPath = response.data.Response.mobileWorldContentPaths.en
+            var manifestUrl = `http://www.bungie.net${manifestPath}`
 
-                    manifest.openDatabaseConnection()
-                    
-                    api.manifest = true
-                    logger.info('Successfully acquired manifest from %s', manifest_url)
+            var shouldUpdate = shouldManifestUpdate(manifestPath)
+
+            if (!shouldUpdate) {
+                logger.info('Manifest %s does not need to be updated. (%s)', api.manifestInfo.fileName, manifestPath)
+                fulfill(false)
+                return
+            }
+
+            manifest.closeDatabaseConnection()
+            
+            var success = deleteOldManifest()
+            if (!success) return
+
+            instance.get(manifestUrl, {responseType: 'stream'})
+            .then(function(response) {
+                downloadManifest(response)
+                .then(() => {
+                    unzipManifest()
+                    .then(() => {
+                        renameManifestDatabase()
+                        updateManifestInfoFile(manifestPath)
+                        
+                        logger.info('Successfully acquired manifest from %s', manifestUrl)
+                        fulfill(true)
+                    })
+                    .catch((err) => {
+                        logger.error(err)
+                        reject(err)
+                    })
                 })
+            })
+            .catch(function(error) {
+                logger.error(error)
+                reject(error)
             })
         })
         .catch(function(error) {
             logger.error(error)
+            reject(error)
         })
     })
-    .catch(function(error) {
-        logger.error(error)
-    });
 }
 
 async function downloadManifest(response) {
@@ -129,23 +151,68 @@ async function unzipManifest() {
 
             fulfill()
         } catch(err) {
-            logger.error(error)
+            reject(err)
         }
-
-        reject()
     })
 }
 
-function renameManifestDatabase() {
-    var manifestPath = path.resolve('./manifest');
-    var files = fs.readdirSync(manifestPath)
+var manifestPath = path.resolve('./manifest');
 
-    files.forEach(file => fs.renameSync(
-        manifestPath + `/${file}`,
-        manifestPath + '/manifest.db',
-        err => logger.error(err)
-    ))
+//if the downloaded file name has changed then the manifest has been updated
+function shouldManifestUpdate(remoteManifestPath) {
+    if (!fs.existsSync(path.join(manifestPath, 'manifest.db'))) //if the database is missing then we should update
+        return true
+
+    const manifestInfo = readManifestInfo()
+
+    if (manifestInfo) {
+        api.manifestInfo = manifestInfo
+
+        return manifestInfo.fileName != remoteManifestPath
+    }
+    return true
 }
+
+function renameManifestDatabase() {
+    var files = fs.readdirSync(manifestPath)
+    var fileName = ''
+
+    files.forEach(file => {
+        fileName = file
+        fs.renameSync(
+            path.join(manifestPath, file),
+            path.join(manifestPath, 'manifest.db'),
+            err => logger.error(err)
+        )
+    })
+}
+
+function readManifestInfo() {
+    var manifestInfoPath = path.join(manifestPath, 'manifest_info.json')
+
+    if (fs.existsSync(manifestInfoPath)) {
+        const fileData = fs.readFileSync(manifestInfoPath, {encoding:'utf8', flag:'r'})
+        const jsonFileData = JSON.parse(fileData)
+        logger.info({
+            message: 'Read manifest_info.json',
+            ...jsonFileData
+        })
+        return jsonFileData
+
+    } else {
+        return false
+    }
+}
+
+function updateManifestInfoFile(fileName) {
+    api.manifestInfo = {
+        fileName: fileName,
+        lastChecked: Date.now()
+    }
+    fs.writeFile(path.join(manifestPath, 'manifest_info.json'), JSON.stringify(api.manifestInfo), (err) => logger.error(err))
+}
+
+
 
 function deleteOldManifest() {
     var manifestPath = path.resolve('./manifest');
