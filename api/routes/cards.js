@@ -93,6 +93,70 @@ router.use(async function (req, res, next) {
     }
 })
 
+router.get('/characters', async function(req, res, next) {
+    var membershipType = req.cookies['membership_type']
+    var membershipId = req.cookies['membership_id']
+    var accessToken = req.signedCookies['access_token']
+    
+    const profiler = `Retrieve characters list for user ${membershipId} (${res.ip})`
+    logger.profile(profiler)
+
+    instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}`, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        },
+        params: {
+            'components': '200'
+        }
+    })
+    .then((response) => {
+        var promises = []
+        var characters = []
+
+        for (var character in response.data.Response.characters.data) {
+            var characterData = response.data.Response.characters.data[character]
+
+            promises.push(objects.character(characterData, null, null, true).then((c) => characters.push(c)))
+        }
+
+        Promise.all(promises)
+        .then(() => {
+            var charactersSorted = []
+
+            for (var char of characters) {
+                switch(char.class) {
+                    case 'Hunter':
+                        charactersSorted[0] = char
+                        break
+                    case 'Warlock':
+                        charactersSorted[1] = char
+                        break
+                    case 'Titan':
+                        charactersSorted[2] = char
+                        break
+                }
+            }
+            
+            res.json(charactersSorted)
+            logger.profile(profiler)
+        })
+        .catch((error) => {
+            logger.error({
+                message: error,
+                ip: req.ip
+            })
+            next(error)
+        })
+    })
+    .catch((error) => {
+        logger.error({
+            message: error,
+            ip: req.ip
+        })
+        next(error)
+    })
+})
+
 router.get('/', async function(req, res, next){
     var membershipType = req.cookies['membership_type']
     var membershipId = req.cookies['membership_id']
@@ -101,7 +165,7 @@ router.get('/', async function(req, res, next){
     const profiler = `Retrieve profile info for user ${membershipId} (${res.ip})`
     logger.profile(profiler)
 
-    instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}`, {
+    instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}/Character/${req.query.character}`, {
         headers: {
             'Authorization': `Bearer ${accessToken}`
         },
@@ -110,7 +174,26 @@ router.get('/', async function(req, res, next){
         }
     })
     .then(function(response) {
-        var promises = []
+        response = response.data.Response
+
+        var characterData = response.character.data
+        var characterEquipment = response.equipment.data
+        var itemComponents = response.itemComponents
+
+        objects.character(characterData, characterEquipment, itemComponents)
+        .then((character) => {
+            res.json({character})
+            logger.profile(profiler)
+        })
+        .catch(err => {
+            logger.error({
+                message: err,
+                ip: req.ip
+            })
+            next(err)
+        })
+
+        /*var promises = []
         var characters = []
 
         for (var character in response.data.Response.characters.data) {
@@ -133,7 +216,7 @@ router.get('/', async function(req, res, next){
                 ip: req.ip
             })
             next(err)
-        })
+        })*/
     })
     .catch(function(error) {
         logger.error({

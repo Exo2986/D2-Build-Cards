@@ -1,3 +1,4 @@
+const path = require('path')
 const manifest = require('./manifest.js')
 
 var objects = {}
@@ -15,11 +16,11 @@ Grenade plug category ends with grenades
 Jump plug category ends with movement
 */
 
-function bungieResourcePath(path) {
-    return 'https://www.bungie.net' + path
+function bungieResourcePath(resourcePath) {
+    return 'https://www.bungie.net/' + resourcePath
 }
 
-objects.character = function(characterData, characterEquipment, itemComponents) {
+objects.character = function(characterData, characterEquipment, itemComponents, characterOnly=false) {
     return new Promise(async (fulfill, reject) => {
         var character = {};
 
@@ -32,6 +33,13 @@ objects.character = function(characterData, characterEquipment, itemComponents) 
         classJson = JSON.parse(classJson.json)
 
         character.class = classJson.displayProperties.name
+        character.emblem = bungieResourcePath(characterData.emblemPath)
+        character.emblemBackground = bungieResourcePath(characterData.emblemBackgroundPath)
+
+        if (characterOnly) {
+            fulfill(character)
+            return
+        }
 
         //character stats
         character.stats = {}

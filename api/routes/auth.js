@@ -12,6 +12,12 @@ router.get('/', function(req, res, next) {
     })
 });
 
+router.get('/is-authenticated', function(req, res, next) {
+    const authenticated = req.signedCookies['access_token'] != null || req.signedCookies['refresh_token'] != null
+
+    res.json({authenticated})
+})
+
 router.get('/callback', async function(req, res, next) {
     var code = req.query.code;
 

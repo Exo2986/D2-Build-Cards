@@ -11,14 +11,25 @@ const winston = require('winston')
 const morgan = require('morgan')
 require('winston-daily-rotate-file')
 
-var key = fs.readFileSync('./../certs/cert.key');
-var cert = fs.readFileSync('./../certs/cert.pem');
-var options = {
-  key: key,
-  cert: cert,
-  requestCert: false,
-  rejectUnauthorized: false
-};
+var env = process.env.NODE_ENV || 'development';
+
+if (env == 'production') {
+  var key = fs.readFileSync('./../certs/privkey.pem');
+  var cert = fs.readFileSync('./../certs/fullchain.pem');
+  var options = {
+    key: key,
+    cert: cert
+  };
+} else {
+  var key = fs.readFileSync('./../certs/cert.key');
+  var cert = fs.readFileSync('./../certs/cert.pem');
+  var options = {
+    key: key,
+    cert: cert,
+    requestCert: false,
+    rejectUnauthorized: false
+  };
+}
 
 // var indexRouter = require('./routes/index');
 // var usersRouter = require('./routes/users');
@@ -140,7 +151,11 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(reactBuildDir, 'index.html'))
 })
 
-var port = 8001
+if (env == 'production') {
+  var port = 443
+} else {
+  var port = 8001
+}
 
 var server = https.createServer(options, app);
 
@@ -166,5 +181,12 @@ server.listen(port, () => {
 
   winston.info(`Listening on port ${port}`);
 });
+
+// Redirect from http port 80 to https
+var http = require('http');
+http.createServer(function (req, res) {
+    res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+    res.end();
+}).listen(80);
 
 module.exports = app;
