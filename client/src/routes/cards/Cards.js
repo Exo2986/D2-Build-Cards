@@ -171,7 +171,7 @@ function CardBody(props) {
     )
 }
 
-function DownloadImageModal({ show, handleClose, imageURL }) {
+function DownloadImageModal({ show, handleClose, imageURL, downloadName }) {
     if (imageURL == null) {
         return (
             <Modal show={show} onHide={handleClose} size='lg' centered>
@@ -194,7 +194,7 @@ function DownloadImageModal({ show, handleClose, imageURL }) {
                 <Modal.Body>
                     <img src={imageURL} className='download-image'></img>
                     <hr/>
-                    <p>Your image should be downloading. If not, you can save the above image to your device manually.</p>
+                    <p>Your image should be downloading. If not, click <a download={downloadName} href={imageURL}>here</a>.</p>
                 </Modal.Body>
             </Modal>
         )
@@ -210,6 +210,7 @@ function Cards() {
     const [character, setCharacter] = useState(false)
     const [showDownloadModal, setShowDownloadModal] = useState(false)
     const [imageDownloadURL, setImageDownloadURL] = useState()
+    const [downloadName, setDownloadName] = useState()
 
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
@@ -263,6 +264,8 @@ function Cards() {
             fileName = fileName.replace(/[^a-zA-Z0-9\-_]/g, '') //only allow alphanumeric characters mostly
             fileName += '.png'
 
+            setDownloadName(fileName)
+
             download(dataUrl, fileName)
         })
         .catch(err => {
@@ -308,7 +311,7 @@ function Cards() {
                         </Col>
                     </Row>
                 </Container>
-                <DownloadImageModal show={showDownloadModal} handleClose={() => setShowDownloadModal(false)} imageURL={imageDownloadURL}/>
+                <DownloadImageModal show={showDownloadModal} handleClose={() => setShowDownloadModal(false)} imageURL={imageDownloadURL} downloadName={downloadName}/>
             </>
         )
     } else {
