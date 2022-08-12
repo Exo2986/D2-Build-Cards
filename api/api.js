@@ -175,8 +175,10 @@ function shouldManifestUpdate(remoteManifestPath) {
 
 function renameManifestDatabase() {
     var files = fs.readdirSync(manifestPath)
+    var fileName = ''
 
     files.forEach(file => {
+        fileName = file
         fs.renameSync(
             path.join(manifestPath, file),
             path.join(manifestPath, 'manifest.db'),
