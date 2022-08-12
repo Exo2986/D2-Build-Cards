@@ -17,7 +17,7 @@ Jump plug category ends with movement
 */
 
 function bungieResourcePath(resourcePath) {
-    return 'https://www.bungie.net/' + resourcePath
+    return 'https://www.bungie.net' + resourcePath
 }
 
 objects.character = function(characterData, characterEquipment, itemComponents, characterOnly=false) {

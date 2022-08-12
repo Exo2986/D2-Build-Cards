@@ -1,4 +1,4 @@
-import { Stack, Container, Row, Col, Button, Form } from "react-bootstrap"
+import { Stack, Container, Row, Col, Button, Form, Modal } from "react-bootstrap"
 import './Cards.css'
 import Loading from '../../common/Loading.js'
 import axios from 'axios'
@@ -171,6 +171,36 @@ function CardBody(props) {
     )
 }
 
+function DownloadImageModal({ show, handleClose, imageURL }) {
+    if (imageURL == null) {
+        return (
+            <Modal show={show} onHide={handleClose} size='lg' centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Loading build card</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className='loading'>
+                        <Loading/>
+                    </div>
+                </Modal.Body>
+            </Modal>
+        )
+    } else {
+        return(
+            <Modal show={show} onHide={handleClose} size='lg' centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Download build card</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <img src={imageURL} className='download-image'></img>
+                    <hr/>
+                    <p>Your image should be downloading. If not, you can save the above image to your device manually.</p>
+                </Modal.Body>
+            </Modal>
+        )
+    }
+}
+
 function Cards() {
     const cardColumn = useRef(null)
 
@@ -178,7 +208,9 @@ function Cards() {
     const [cardTitle, setCardTitle] = useState('My Build');
     const [cardAuthor, setCardAuthor] = useState('Example');
     const [character, setCharacter] = useState(false)
-    const {state} = useLocation()
+    const [showDownloadModal, setShowDownloadModal] = useState(false)
+    const [imageDownloadURL, setImageDownloadURL] = useState()
+
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
 
@@ -221,9 +253,17 @@ function Cards() {
     const cardParent = useRef(null)
 
     const saveAsImage = () => {
-        htmlToImage.toPng(cardParent.current)
+        setImageDownloadURL(null)
+        setShowDownloadModal(true)
+        htmlToImage.toPng(cardParent.current, {cacheBust:true})
         .then(dataUrl => {
-            download(dataUrl, 'my_build_card.png')
+            setImageDownloadURL(dataUrl)
+            
+            var fileName = cardTitle.toLowerCase().replaceAll(' ', '-')
+            fileName = fileName.replace(/[^a-zA-Z0-9\-_]/g, '') //only allow alphanumeric characters mostly
+            fileName += '.png'
+
+            download(dataUrl, fileName)
         })
         .catch(err => {
             console.log(err)
@@ -242,31 +282,34 @@ function Cards() {
 
     if(character) {
         return (
-            <Container fluid id='main'>
-                <Row className='w-100 mt-5 mb-3'>
-                    <div id='settings-box' className='col-6 col-centered'>
-                        <Button onClick={saveAsImage}>Save as PNG</Button>
-                        <Form.Group>
-                            <Form.Label>Build Name</Form.Label>
-                            <Form.Control value={cardTitle} onChange={updateCardTitle}></Form.Control>
-                        </Form.Group>
-                        <Form.Group>
-                            <Form.Label>Author</Form.Label>
-                            <Form.Control value={cardAuthor} onChange={updateCardAuthor}></Form.Control>
-                        </Form.Group>
-                    </div>
-                </Row>
-                <Row className='w-100 p-0'>
-                    <Col className='col-6 col-centered p-0' ref={cardColumn}>
-                        <div id='card-scalar' style={{'transform': `scale(${cardColumnWidth/3840})`}}>
-                            <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
-                                <CardHeader author={cardAuthor} title={cardTitle}/>
-                                <CardBody character={character}/>
-                            </div>
+            <>
+                <Container fluid id='main'>
+                    <Row className='w-100 mt-5 mb-3'>
+                        <div id='settings-box' className='col-6 col-centered'>
+                            <Button onClick={saveAsImage}>Save as PNG</Button>
+                            <Form.Group>
+                                <Form.Label>Build Name</Form.Label>
+                                <Form.Control value={cardTitle} onChange={updateCardTitle}></Form.Control>
+                            </Form.Group>
+                            <Form.Group>
+                                <Form.Label>Author</Form.Label>
+                                <Form.Control value={cardAuthor} onChange={updateCardAuthor}></Form.Control>
+                            </Form.Group>
                         </div>
-                    </Col>
-                </Row>
-            </Container>
+                    </Row>
+                    <Row className='w-100 p-0'>
+                        <Col className='col-6 col-centered p-0' ref={cardColumn}>
+                            <div id='card-scalar' style={{'transform': `scale(${cardColumnWidth/3840})`}}>
+                                <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
+                                    <CardHeader author={cardAuthor} title={cardTitle}/>
+                                    <CardBody character={character}/>
+                                </div>
+                            </div>
+                        </Col>
+                    </Row>
+                </Container>
+                <DownloadImageModal show={showDownloadModal} handleClose={() => setShowDownloadModal(false)} imageURL={imageDownloadURL}/>
+            </>
         )
     } else {
         return (    

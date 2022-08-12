@@ -171,7 +171,7 @@ const getManifest = () => {
   .catch(() => {
     //start a panic interval, check for manifest updates much more frequently
     winston.info('Starting panic interval, checking for manifest updates every 15 minutes.')
-    setTimeout(getManifest, 1000 * 60)
+    setTimeout(getManifest, 1000 * 60 * 60 * 15)
   })
 }
 

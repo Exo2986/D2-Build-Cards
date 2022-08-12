@@ -16,6 +16,29 @@
     padding: 2%;
 }
 
+.download-image {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+}
+
+.modal-content {
+    background-color: rgb(40, 40, 40) !important;
+}
+
+.btn-close {
+    color: white !important;
+    opacity: 1 !important;
+}
+
+.loading {
+    display: flex;
+    min-width: 100%;
+    min-height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
 .col-centered {
     float: none !important;
     margin: 0 auto !important;
