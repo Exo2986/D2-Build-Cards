@@ -192,31 +192,6 @@ router.get('/', async function(req, res, next){
             })
             next(err)
         })
-
-        /*var promises = []
-        var characters = []
-
-        for (var character in response.data.Response.characters.data) {
-            var characterData = response.data.Response.characters.data[character]
-            var characterEquipment = response.data.Response.characterEquipment.data[character]
-            var itemComponents = response.data.Response.itemComponents
-
-            promises.push(objects.character(characterData, characterEquipment, itemComponents)
-            .then((c) => characters.push(c)))
-        }
-
-        Promise.all(promises)
-        .then(() => {
-            res.json(characters)
-            logger.profile(profiler)
-        })
-        .catch(err => {
-            logger.error({
-                message: err,
-                ip: req.ip
-            })
-            next(err)
-        })*/
     })
     .catch(function(error) {
         logger.error({
