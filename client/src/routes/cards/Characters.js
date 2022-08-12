@@ -7,6 +7,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 function CharacterButton(props) {
+    if (props.character == null) return
+
     return (
         <div className='character-button'>
             <Link to={`/cards/card?character=${props.character.id}`} className='character-link'>
