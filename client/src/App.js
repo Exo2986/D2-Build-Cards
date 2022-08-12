@@ -3,7 +3,12 @@ import Main from './Main.js'
 import './App.css'
 import axios from 'axios'
 
-axios.defaults.baseURL = 'https://localhost:8001/api'
+var env = 'production'
+
+if (env == 'production')
+    axios.defaults.baseURL = 'https://d2buildcards.com/api'
+else
+    axios.defaults.baseURL = 'https://localhost:8001/api'
 
 class App extends Component {
     render() {

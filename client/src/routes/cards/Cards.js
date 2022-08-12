@@ -1,9 +1,10 @@
 import { Stack, Container, Row, Col, Button, Form } from "react-bootstrap"
 import './Cards.css'
+import Loading from '../../common/Loading.js'
 import axios from 'axios'
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { Link, useLocation } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import * as htmlToImage from 'html-to-image';
 import download from 'downloadjs';
 import useFitText from "use-fit-text"
@@ -142,9 +143,6 @@ function CardHeader(props) {
     const authorFitText = useFitText({maxFontSize:1000})
     const authorFontSize = authorFitText.fontSize
 
-    console.log(titleFitText)
-    console.log(titleFontSize)
-
     return (
         <Stack direction='horizontal' gap={1} id='card-header' className='translucent-background'>
             <p id='card-title' style={{fontSize: titleFontSize}} ref={titleFitText.ref}>{props.title}</p>
@@ -182,6 +180,7 @@ function Cards() {
     const [character, setCharacter] = useState(false)
     const {state} = useLocation()
     const navigate = useNavigate()
+    const [searchParams, setSearchParams] = useSearchParams()
 
     useLayoutEffect(() => {
         if (character) {
@@ -199,12 +198,10 @@ function Cards() {
         }
     }, [character]);
 
-    const charClass = state.charClass
-
     const getCharacterInfo = () => {
         if (character) return
 
-        axios.get('/cards')
+        axios.get(`/cards?character=${searchParams.get('character')}`)
         .then(res => {
             console.log(res)
             if (res.data.refresh) {
@@ -212,13 +209,8 @@ function Cards() {
             } else if ('authenticated' in res.data) {
                 navigate('../../auth')
             } else {
-                var charResult = res.data.find(obj => {
-                    return obj.class == charClass
-                })
-    
-                if(charResult) {
-                    setCharacter(charResult)
-                }
+                if (res.data.character)
+                    setCharacter(res.data.character)
             }
         })
         .catch(err => {
@@ -229,7 +221,6 @@ function Cards() {
     const cardParent = useRef(null)
 
     const saveAsImage = () => {
-        console.log('clicked')
         htmlToImage.toPng(cardParent.current)
         .then(dataUrl => {
             download(dataUrl, 'my_build_card.png')
@@ -278,7 +269,11 @@ function Cards() {
             </Container>
         )
     } else {
-        return (<h1>Loading</h1>)
+        return (    
+                <div className='d-flex align-items-center justify-content-center' id='main'>
+                    <Loading/>
+                </div>
+            )
     }
 }
 

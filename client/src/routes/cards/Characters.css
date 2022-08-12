@@ -1,11 +1,18 @@
-.btn-character {
-    font: 32px "Open Sans", Arial, sans-serif;
-    border-color: rgba(128, 128, 128, 20) !important;
-    border-top: 0px !important;
-    border-bottom: 0px !important;
+.character-button {
+    position: relative;
 }
 
-.btn-character:hover,
-.btn-character:focus {
-    background-color: rgba(128, 128, 128, 75) !important;
+.character-button a img {
+    width: 35vw;
+}
+
+.character-button p {
+    position: absolute;
+    font-weight: bold;
+    font-size: 30pt;
+    top: 50%;
+    left: 20%;
+    transform: translate(0%, -50%);
+    color: white;
+    text-decoration: none !important;
 }
