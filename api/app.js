@@ -118,7 +118,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(config.cookie_secret, {
   httpOnly: true,
-  secure: true
+  secure: true,
+
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 

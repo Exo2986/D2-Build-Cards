@@ -18,7 +18,7 @@ const logger = winston.createLogger({
 var router = express.Router();
 
 router.post('/', (req, res, next) => {
-    if ('logs' in req.body) {
+    if ('logs' in req.body && req.signedCookies['access_token'] != null) {
         for (var log of req.body.logs) {
             logger.log(log.level, log.message)
         }
