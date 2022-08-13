@@ -3,6 +3,7 @@ import React, { Component } from 'react'
 import './Auth.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import axios from 'axios'
+import log from 'loglevel'
 
 function Auth() {
     const submitForAuth = () => {
@@ -13,7 +14,7 @@ function Auth() {
             window.location.replace(res.data.url)
         })
         .catch((err) => {
-            console.log(err)
+            log.error(err)
         })
     }
 

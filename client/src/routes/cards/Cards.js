@@ -8,6 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import * as htmlToImage from 'html-to-image';
 import FileSaver, { saveAs } from "file-saver"
 import useFitText from "use-fit-text"
+import log from 'loglevel'
 
 function ModIcon(props) {
     return (
@@ -171,7 +172,7 @@ function CardBody(props) {
     )
 }
 
-function DownloadImageModal({ show, handleClose, imageURL, downloadName }) {
+function DownloadImageModal({ show, handleClose, imageURL, downloadName, isFileSaverSupported }) {
     if (imageURL == null) {
         return (
             <Modal show={show} onHide={handleClose} size='lg' centered>
@@ -182,6 +183,17 @@ function DownloadImageModal({ show, handleClose, imageURL, downloadName }) {
                     <div className='loading'>
                         <Loading/>
                     </div>
+                </Modal.Body>
+            </Modal>
+        )
+    } else if (!isFileSaverSupported) {
+        return(
+            <Modal show={show} onHide={handleClose} size='lg' centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Error</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>File saving is not supported on this browser.</p>
                 </Modal.Body>
             </Modal>
         )
@@ -201,6 +213,48 @@ function DownloadImageModal({ show, handleClose, imageURL, downloadName }) {
     }
 }
 
+function SettingsBox(props) {
+    const saveAsImage = () => {
+        try {
+            var isFileSaverSupported = !!new Blob
+        } catch (e) {
+            props.setIsFileSaverSupported(false)
+        }
+
+        props.setImageDownloadURL(null)
+        props.setShowDownloadModal(true)
+        htmlToImage.toPng(props.cardParent.current, {cacheBust:true})
+        .then(dataUrl => {  
+            props.setImageDownloadURL(dataUrl)
+            
+            var fileName = props.cardTitle.toLowerCase().replaceAll(' ', '-')
+            fileName = fileName.replace(/[^a-zA-Z0-9\-_]/g, '') //only allow alphanumeric characters mostly
+            fileName += '.png'
+
+            props.setDownloadName(fileName)
+
+            FileSaver.saveAs(dataUrl, fileName)
+        })
+        .catch(err => {
+            log.error(err)
+        }) 
+    }
+
+    return (
+        <div id='settings-box' className='col-6 col-centered'>
+            <Button onClick={saveAsImage}>Save as PNG</Button>
+            <Form.Group>
+                <Form.Label>Build Name</Form.Label>
+                <Form.Control value={props.cardTitle} onChange={(e) => props.setCardTitle(e.target.value)}></Form.Control>
+            </Form.Group>
+            <Form.Group>
+                <Form.Label>Author</Form.Label>
+                <Form.Control value={props.cardAuthor} onChange={(e) => props.setCardAuthor(e.target.value)}></Form.Control>
+            </Form.Group>
+        </div>
+    )
+}
+
 function Cards() {
     const cardColumn = useRef(null)
 
@@ -211,6 +265,7 @@ function Cards() {
     const [showDownloadModal, setShowDownloadModal] = useState(false)
     const [imageDownloadURL, setImageDownloadURL] = useState()
     const [downloadName, setDownloadName] = useState()
+    const [isFileSaverSupported, setIsFileSaverSupported] = useState(true)
 
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
@@ -247,31 +302,11 @@ function Cards() {
             }
         })
         .catch(err => {
-            console.log(err)
+            log.error(err)
         })
     }
 
     const cardParent = useRef(null)
-
-    const saveAsImage = () => {
-        setImageDownloadURL(null)
-        setShowDownloadModal(true)
-        htmlToImage.toPng(cardParent.current, {cacheBust:true})
-        .then(dataUrl => {
-            setImageDownloadURL(dataUrl)
-            
-            var fileName = cardTitle.toLowerCase().replaceAll(' ', '-')
-            fileName = fileName.replace(/[^a-zA-Z0-9\-_]/g, '') //only allow alphanumeric characters mostly
-            fileName += '.png'
-
-            setDownloadName(fileName)
-
-            FileSaver.saveAs(dataUrl, fileName)
-        })
-        .catch(err => {
-            console.log(err)
-        }) 
-    }
 
     const updateCardTitle = (event) => {
         setCardTitle(event.target.value)
@@ -288,17 +323,9 @@ function Cards() {
             <>
                 <Container fluid id='main'>
                     <Row className='w-100 mt-5 mb-3'>
-                        <div id='settings-box' className='col-6 col-centered'>
-                            <Button onClick={saveAsImage}>Save as PNG</Button>
-                            <Form.Group>
-                                <Form.Label>Build Name</Form.Label>
-                                <Form.Control value={cardTitle} onChange={updateCardTitle}></Form.Control>
-                            </Form.Group>
-                            <Form.Group>
-                                <Form.Label>Author</Form.Label>
-                                <Form.Control value={cardAuthor} onChange={updateCardAuthor}></Form.Control>
-                            </Form.Group>
-                        </div>
+                        <SettingsBox 
+                            {...{cardTitle, setCardTitle, cardAuthor, setCardAuthor, setImageDownloadURL, setShowDownloadModal, setDownloadName, cardParent, setIsFileSaverSupported}}
+                        />
                     </Row>
                     <Row className='w-100 p-0'>
                         <Col className='col-6 col-centered p-0' ref={cardColumn}>
@@ -311,7 +338,13 @@ function Cards() {
                         </Col>
                     </Row>
                 </Container>
-                <DownloadImageModal show={showDownloadModal} handleClose={() => setShowDownloadModal(false)} imageURL={imageDownloadURL} downloadName={downloadName}/>
+                <DownloadImageModal 
+                    show={showDownloadModal} 
+                    handleClose={() => setShowDownloadModal(false)} 
+                    imageURL={imageDownloadURL} 
+                    downloadName={downloadName}
+                    isFileSaverSupported={isFileSaverSupported}
+                />
             </>
         )
     } else {

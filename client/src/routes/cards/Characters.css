@@ -4,12 +4,13 @@
 
 .character-button a img {
     width: 35vw;
+    max-width: fit-content;
 }
 
 .character-button p {
     position: absolute;
     font-weight: bold;
-    font-size: 30pt;
+    font-size: calc(1em + 1.5vw);
     top: 50%;
     left: 20%;
     transform: translate(0%, -50%);

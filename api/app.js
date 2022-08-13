@@ -33,9 +33,6 @@ if (env == 'production') {
 
 // var indexRouter = require('./routes/index');
 // var usersRouter = require('./routes/users');
-
-var authRouter = require('./routes/auth');
-var cardsRouter = require('./routes/cards');
 const manifest = require('./manifest.js');
 const { loggers } = require('winston');
 
@@ -128,8 +125,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use('/', indexRouter);
 // app.use('/users', usersRouter);
 
-app.use('/api/auth', authRouter);
-app.use('/api/cards', cardsRouter);
+
+var authRouter = require('./routes/auth');
+var cardsRouter = require('./routes/cards');
+var loggerRouter = require('./routes/logger')
+
+app.use('/api/auth', authRouter)
+app.use('/api/cards', cardsRouter)
+app.use('/api/logger', loggerRouter)
 
 // error handler
 app.use(function(err, req, res, next) {

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import axios from 'axios'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import log from 'loglevel'
 
 function Callback() {
     const navigate = useNavigate()
@@ -19,7 +20,7 @@ function Callback() {
             navigate('/cards')
         })
         .catch((err) => {
-            console.log(err)
+            log.error(err)
             navigate('/auth')
         })
     }
