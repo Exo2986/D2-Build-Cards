@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useLocation } from 'react-router-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import * as htmlToImage from 'html-to-image';
-import download from 'downloadjs';
+import FileSaver, { saveAs } from "file-saver"
 import useFitText from "use-fit-text"
 
 function ModIcon(props) {
@@ -194,7 +194,7 @@ function DownloadImageModal({ show, handleClose, imageURL, downloadName }) {
                 <Modal.Body>
                     <img src={imageURL} className='download-image'></img>
                     <hr/>
-                    <p>Your image should be downloading. If not, click <a download={downloadName} href={imageURL}>here</a>.</p>
+                    <p>Your image should be downloading. If not, click <a onClick={() => {FileSaver.saveAs(imageURL, downloadName)}} href='#'>here</a>.</p>
                 </Modal.Body>
             </Modal>
         )
@@ -266,7 +266,7 @@ function Cards() {
 
             setDownloadName(fileName)
 
-            download(dataUrl, fileName)
+            FileSaver.saveAs(dataUrl, fileName)
         })
         .catch(err => {
             console.log(err)

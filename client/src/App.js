@@ -3,7 +3,7 @@ import Main from './Main.js'
 import './App.css'
 import axios from 'axios'
 
-var env = 'production'
+var env = 'dev'
 
 if (env == 'production')
     axios.defaults.baseURL = 'https://d2buildcards.com/api'
