@@ -65,7 +65,7 @@ manifest.getJSONFromHash = function(hash, table) {
     var id = manifest.idFromHash(hash)
     var query = `SELECT json FROM ${table} WHERE id = ${id}`
 
-    logger.info({
+    logger.verbose({
         message: 'Querying manifest.db',
         query: query
     })

@@ -80,6 +80,7 @@ winston.configure({
 })
 
 winston.add(new winston.transports.Console({
+  level: 'http' ? env == 'production' : 'debug',
   format: winston.format.combine(
     winston.format.colorize(),
     winston.format.simple()

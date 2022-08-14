@@ -9,8 +9,8 @@
 }
 
 #settings-box {
-    border-color: white;
-    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.7);
+    border-width: 0.1vw;
     border-style: solid;
     color: rgba(20, 20, 20, 0.65);
     padding: 2%;

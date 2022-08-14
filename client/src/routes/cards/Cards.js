@@ -206,14 +206,45 @@ function DownloadImageModal({ show, handleClose, imageURL, downloadName, isFileS
                 <Modal.Body>
                     <img src={imageURL} className='download-image'></img>
                     <hr/>
-                    <p>Your image should be downloading. If not, click <a onClick={() => {FileSaver.saveAs(imageURL, downloadName)}} href='#'>here</a>.</p>
+                    <p>Your image should be downloading. If not, click <a href={imageURL} download={downloadName}>here</a>.</p>
                 </Modal.Body>
             </Modal>
         )
     }
 }
 
-function SettingsBox(props) {
+function SaveAsModal(props) {
+    const resolutionRef = useRef()
+    const fileTypeRef = useRef()
+
+    const saveFuncMap = {
+        'png': htmlToImage.toPng,
+        'jpg': htmlToImage.toJpeg
+    }
+
+    const resolutionMap = {
+        '4k': {
+            width: 3840,
+            height: 2160
+        },
+        '1440p': {
+            width: 2560,
+            height: 1440
+        },
+        '1080p': {
+            width: 1920,
+            height: 1080
+        },
+        '720p': {
+            width: 1280,
+            height: 720
+        },
+        '360p': {
+            width: 640,
+            height: 360
+        }
+    }
+
     const saveAsImage = () => {
         try {
             var isFileSaverSupported = !!new Blob
@@ -222,14 +253,21 @@ function SettingsBox(props) {
         }
 
         props.setImageDownloadURL(null)
+        props.handleClose()
         props.setShowDownloadModal(true)
-        htmlToImage.toPng(props.cardParent.current, {cacheBust:true})
+
+        const fileType = fileTypeRef.current.value
+        const resolution = resolutionMap[resolutionRef.current.value]
+
+        const saveFunc = saveFuncMap[fileType]
+
+        saveFunc(props.cardParent.current, {cacheBust:true, canvasWidth: resolution.width, canvasHeight: resolution.height, pixelRatio: 1})
         .then(dataUrl => {  
             props.setImageDownloadURL(dataUrl)
             
             var fileName = props.cardTitle.toLowerCase().replaceAll(' ', '-')
             fileName = fileName.replace(/[^a-zA-Z0-9\-_]/g, '') //only allow alphanumeric characters mostly
-            fileName += '.png'
+            fileName += '.' + fileType
 
             props.setDownloadName(fileName)
 
@@ -240,9 +278,41 @@ function SettingsBox(props) {
         }) 
     }
 
+    return(
+        <Modal show={props.show} onHide={props.handleClose} size='lg' centered>
+            <Modal.Header closeButton>
+                <Modal.Title>Save as...</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Form>
+                    <Form.Group className='mb-3' controlId='formFileType'>
+                        <Form.Label>File type</Form.Label>
+                        <Form.Select aria-label='Select a file type' ref={fileTypeRef}>
+                            <option value='png' selected>.png</option>
+                            <option value='jpg'>.jpg</option>
+                        </Form.Select>
+                    </Form.Group>
+
+                    <Form.Group className='mb-3' controlId='formResolution'>
+                        <Form.Label>Resolution</Form.Label>
+                        <Form.Select aria-label='Select a resolution' ref={resolutionRef}>
+                            {Object.keys(resolutionMap).map((key) => <option value={key} selected={key == '1080p'}>{key}</option>)}
+                        </Form.Select>
+                    </Form.Group>
+
+                    <Button variant='primary' onClick={saveAsImage}>
+                        Save
+                    </Button>
+                </Form>
+            </Modal.Body>
+        </Modal>
+    )
+}
+
+function SettingsBox(props) {
     return (
-        <div id='settings-box' className='col-6 col-centered'>
-            <Button onClick={saveAsImage}>Save as PNG</Button>
+        <div id='settings-box' className='col-10 col-lg-6 col-centered'>
+            <Button onClick={() => {props.setShowSaveAsModal(true)}}>Save as...</Button>
             <Form.Group>
                 <Form.Label>Build Name</Form.Label>
                 <Form.Control value={props.cardTitle} onChange={(e) => props.setCardTitle(e.target.value)}></Form.Control>
@@ -263,6 +333,7 @@ function Cards() {
     const [cardAuthor, setCardAuthor] = useState('Example');
     const [character, setCharacter] = useState(false)
     const [showDownloadModal, setShowDownloadModal] = useState(false)
+    const [showSaveAsModal, setShowSaveAsModal] = useState(false)
     const [imageDownloadURL, setImageDownloadURL] = useState()
     const [downloadName, setDownloadName] = useState()
     const [isFileSaverSupported, setIsFileSaverSupported] = useState(true)
@@ -323,12 +394,11 @@ function Cards() {
             <>
                 <Container fluid id='main'>
                     <Row className='w-100 mt-5 mb-3'>
-                        <SettingsBox 
-                            {...{cardTitle, setCardTitle, cardAuthor, setCardAuthor, setImageDownloadURL, setShowDownloadModal, setDownloadName, cardParent, setIsFileSaverSupported}}
+                        <SettingsBox {...{cardTitle, setCardTitle, cardAuthor, setCardAuthor, setShowSaveAsModal }}
                         />
                     </Row>
                     <Row className='w-100 p-0'>
-                        <Col className='col-6 col-centered p-0' ref={cardColumn}>
+                        <Col className='col-lg-6 col-10 col-centered p-0' ref={cardColumn}>
                             <div id='card-scalar' style={{'transform': `scale(${cardColumnWidth/3840})`}}>
                                 <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
                                     <CardHeader author={cardAuthor} title={cardTitle}/>
@@ -344,6 +414,11 @@ function Cards() {
                     imageURL={imageDownloadURL} 
                     downloadName={downloadName}
                     isFileSaverSupported={isFileSaverSupported}
+                />
+                <SaveAsModal
+                    show={showSaveAsModal}
+                    handleClose={() => setShowSaveAsModal(false)}
+                    {...{ setImageDownloadURL, setShowDownloadModal, setDownloadName, setIsFileSaverSupported, cardParent, cardTitle }}
                 />
             </>
         )
