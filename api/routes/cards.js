@@ -115,25 +115,30 @@ router.get('/characters', async function(req, res, next) {
 
         for (var character in response.data.Response.characters.data) {
             var characterData = response.data.Response.characters.data[character]
+            var characterPromise = objects.character(characterData, null, null, true)
+            .then((c) => characters.push(c))
+            .catch((error) => {
+                console.log('.aff.agaergaergaegrr')
+                logger.error({
+                    message: error,
+                    ip: req.ip
+                })
+                next(error)
+            })
 
-            promises.push(objects.character(characterData, null, null, true).then((c) => characters.push(c)))
+            promises.push(characterPromise)
         }
 
         Promise.all(promises)
         .then(() => {
             var charactersSorted = []
+            var classes = ['Hunter', 'Warlock', 'Titan']
 
-            for (var char of characters) {
-                switch(char.class) {
-                    case 'Hunter':
-                        charactersSorted[0] = char
-                        break
-                    case 'Warlock':
-                        charactersSorted[1] = char
-                        break
-                    case 'Titan':
-                        charactersSorted[2] = char
-                        break
+            for (var className of classes) {
+                for (var character of characters) {
+                    if (character.class == className) {
+                        charactersSorted.push(character)
+                    }
                 }
             }
             

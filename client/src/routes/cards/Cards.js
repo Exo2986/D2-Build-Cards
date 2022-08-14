@@ -51,19 +51,17 @@ function CharacterStats(props) {
 }
 
 function ArmorItem(props) {
-    const slottedMods = props.item.sockets.filter(socket => socket.json.itemCategoryHashes.includes(4104513227))
-
     return (
         <Stack direction='horizontal' gap={1} className='armor-item translucent-background'>
             <ItemIcon icon_url={props.item.icon}/>
             <Stack gap={0}>
                 <p className='item-name'>{props.item.displayName}</p>
                 <Stack direction='horizontal' gap={1} className='mod-icon-stack'>
-                    {slottedMods.map(mod => <ModIcon icon_url={mod.icon}/>)}
+                    {props.item.mods.map(mod => <ModIcon icon_url={mod.icon}/>)}
                 </Stack>
             </Stack>
             <Stack className='item-mods'>
-                {slottedMods.slice(1).map(mod => <p className='text-truncate'>{mod.displayName}</p>)}    
+                {props.item.mods.slice(1).map(mod => <p className='text-truncate'>{mod.displayName}</p>)}    
             </Stack>
         </Stack>
     )

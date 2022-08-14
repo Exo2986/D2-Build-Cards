@@ -5,7 +5,7 @@ import axios from 'axios'
 import log from 'loglevel'
 import remote from 'loglevel-plugin-remote'
 
-var env = 'production'
+var env = 'dev'
 
 if (env == 'production')
     axios.defaults.baseURL = 'https://d2buildcards.com/api'
