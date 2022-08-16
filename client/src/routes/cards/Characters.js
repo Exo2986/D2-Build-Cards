@@ -24,6 +24,10 @@ function Characters() {
     const navigate = useNavigate()
     const [chars, setChars] = useState()
 
+    const bugsnagErrorMetadata = () => {
+        event.addMetadata('character', chars)
+    }
+
     useEffect(() => {
         axios.get('/cards/characters')
         .then((res) => {
@@ -37,8 +41,16 @@ function Characters() {
             }
         })
         .catch((err) => {
+            console.log(err)
             Bugsnag.notify(err)
         })
+
+        //append character info to bugsnag report
+        Bugsnag.addOnError(bugsnagErrorMetadata)
+
+        return () => { //remove on unmount
+            Bugsnag.removeOnError(bugsnagErrorMetadata)
+        }
     }, [])
 
     if (chars != null) {

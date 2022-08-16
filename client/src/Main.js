@@ -8,11 +8,13 @@ import IsAuthenticated from './common/IsAuthenticated.js'
 import Bugsnag from '@bugsnag/js'
 
 class Main extends React.Component {
+
     constructor(props) {
         super(props)
     }
 
     componentDidCatch(error, errorInfo) {
+        console.log(error)
         Bugsnag.notify(error + " " + errorInfo)
     }
 

@@ -20,6 +20,7 @@ function Callback() {
             navigate('/cards')
         })
         .catch((err) => {
+            console.log(err)
             Bugsnag.notify(err)
             navigate('/auth')
         })

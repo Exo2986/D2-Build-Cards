@@ -272,6 +272,7 @@ function SaveAsModal(props) {
             FileSaver.saveAs(dataUrl, fileName)
         })
         .catch(err => {
+            console.log(err)
             Bugsnag.notify(err)
         }) 
     }
@@ -324,6 +325,7 @@ function SettingsBox(props) {
 }
 
 function Cards() {
+
     const cardColumn = useRef(null)
 
     const [cardColumnWidth, setCardColumnWidth] = useState(0);
@@ -338,6 +340,10 @@ function Cards() {
 
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
+
+    const bugsnagErrorMetadata = (event) => {
+        event.addMetadata('character', character)
+    }
 
     useLayoutEffect(() => {
         if (character) {
@@ -366,11 +372,13 @@ function Cards() {
             } else if ('authenticated' in res.data) {
                 navigate('../../auth')
             } else {
-                if (res.data.character)
+                if (res.data.character){
                     setCharacter(res.data.character)
+                }
             }
         })
         .catch(err => {
+            console.log(err)
             Bugsnag.notify(err)
         })
     }
@@ -385,7 +393,15 @@ function Cards() {
         setCardAuthor(event.target.value)
     }
 
-    useEffect(() => getCharacterInfo(), []) //run on mount
+    useEffect(() => {
+        getCharacterInfo()
+
+        //append character info to bugsnag report
+        Bugsnag.addOnError(bugsnagErrorMetadata)
+        return () => { //run on unmount
+            Bugsnag.removeOnError(bugsnagErrorMetadata)
+        }
+    }, []) //run on mount
 
     if(character) {
         return (

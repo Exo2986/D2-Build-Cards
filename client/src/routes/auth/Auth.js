@@ -14,6 +14,7 @@ function Auth() {
             window.location.replace(res.data.url)
         })
         .catch((err) => {
+            console.log(err)
             Bugsnag.notify(err)
         })
     }
