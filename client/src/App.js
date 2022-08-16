@@ -2,8 +2,8 @@ import React, { Component } from 'react'
 import Main from './Main.js'
 import './App.css'
 import axios from 'axios'
-import log from 'loglevel'
-import remote from 'loglevel-plugin-remote'
+import Bugsnag from '@bugsnag/js'
+import BugsnagPluginReact from '@bugsnag/plugin-react'
 
 var env = 'dev'
 
@@ -12,17 +12,21 @@ if (env == 'production')
 else
     axios.defaults.baseURL = 'https://localhost:8001/api'
 
+Bugsnag.start({
+    apiKey: process.env.BUGSNAG_API_KEY, //not securing the api key is technically okay but im not happy about it
+    plugins: [new BugsnagPluginReact()]
+})
 
-remote.apply(log, { format: remote.json, url:axios.defaults.baseURL + '/logger' })
-
-log.enableAll()
+const ErrorBoundary = Bugsnag.getPlugin('react').createErrorBoundary(React)
 
 class App extends Component {
     render() {
         return (
-            <div className='app'>
-                <Main />
-            </div>
+            <ErrorBoundary>
+                <div className='app'>
+                    <Main />
+                </div>
+            </ErrorBoundary>
         )
     }
 }

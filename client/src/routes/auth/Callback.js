@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import axios from 'axios'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import log from 'loglevel'
+import Bugsnag from '@bugsnag/js'
 
 function Callback() {
     const navigate = useNavigate()
@@ -20,7 +20,7 @@ function Callback() {
             navigate('/cards')
         })
         .catch((err) => {
-            log.error(err)
+            Bugsnag.notify(err)
             navigate('/auth')
         })
     }

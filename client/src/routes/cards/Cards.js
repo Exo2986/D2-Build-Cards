@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import * as htmlToImage from 'html-to-image';
 import FileSaver, { saveAs } from "file-saver"
 import useFitText from "use-fit-text"
-import log from 'loglevel'
+import Bugsnag from '@bugsnag/js'
 
 function ModIcon(props) {
     return (
@@ -272,7 +272,7 @@ function SaveAsModal(props) {
             FileSaver.saveAs(dataUrl, fileName)
         })
         .catch(err => {
-            log.error(err)
+            Bugsnag.notify(err)
         }) 
     }
 
@@ -371,7 +371,7 @@ function Cards() {
             }
         })
         .catch(err => {
-            log.error(err)
+            Bugsnag.notify(err)
         })
     }
 

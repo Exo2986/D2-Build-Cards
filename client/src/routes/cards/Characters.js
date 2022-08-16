@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import './Characters.css'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import log from 'loglevel'
+import Bugsnag from '@bugsnag/js'
 
 function CharacterButton(props) {
     if (props.character == null) return
@@ -37,7 +37,7 @@ function Characters() {
             }
         })
         .catch((err) => {
-            log.error(err)
+            Bugsnag.notify(err)
         })
     }, [])
 

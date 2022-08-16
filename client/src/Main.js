@@ -5,7 +5,7 @@ import React from 'react'
 import Callback from './routes/auth/Callback.js'
 import Cards from './routes/cards/Cards.js'
 import IsAuthenticated from './common/IsAuthenticated.js'
-import log from 'loglevel'
+import Bugsnag from '@bugsnag/js'
 
 class Main extends React.Component {
     constructor(props) {
@@ -13,7 +13,7 @@ class Main extends React.Component {
     }
 
     componentDidCatch(error, errorInfo) {
-        log.error(error.toString())
+        Bugsnag.notify(error + " " + errorInfo)
     }
 
     render() {
