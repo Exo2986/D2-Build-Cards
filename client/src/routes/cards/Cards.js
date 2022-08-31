@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import * as htmlToImage from 'html-to-image';
 import FileSaver, { saveAs } from "file-saver"
 import useFitText from "use-fit-text"
-import Bugsnag from '@bugsnag/js'
+import * as Sentry from "@sentry/react"
 
 function ModIcon(props) {
     return (
@@ -273,7 +273,7 @@ function SaveAsModal(props) {
         })
         .catch(err => {
             console.log(err)
-            Bugsnag.notify(err)
+            Sentry.captureException(err)
         }) 
     }
 
@@ -341,10 +341,6 @@ function Cards() {
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
 
-    const bugsnagErrorMetadata = (event) => {
-        event.addMetadata('character', character)
-    }
-
     useLayoutEffect(() => {
         if (character) {
             setCardColumnWidth(cardColumn.current.clientWidth)
@@ -379,7 +375,7 @@ function Cards() {
         })
         .catch(err => {
             console.log(err)
-            Bugsnag.notify(err)
+            Sentry.captureException(err)
         })
     }
 
@@ -395,12 +391,6 @@ function Cards() {
 
     useEffect(() => {
         getCharacterInfo()
-
-        //append character info to bugsnag report
-        Bugsnag.addOnError(bugsnagErrorMetadata)
-        return () => { //run on unmount
-            Bugsnag.removeOnError(bugsnagErrorMetadata)
-        }
     }, []) //run on mount
 
     if(character) {

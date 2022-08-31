@@ -2,8 +2,8 @@ import React, { Component } from 'react'
 import Main from './Main.js'
 import './App.css'
 import axios from 'axios'
-import Bugsnag from '@bugsnag/js'
-import BugsnagPluginReact from '@bugsnag/plugin-react'
+import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
 
 var env = 'dev'
 
@@ -12,21 +12,18 @@ if (env == 'production')
 else
     axios.defaults.baseURL = 'https://localhost:8001/api'
 
-Bugsnag.start({
-    apiKey: process.env.BUGSNAG_API_KEY, //not securing the api key is technically okay but im not happy about it
-    plugins: [new BugsnagPluginReact()]
-})
-
-const ErrorBoundary = Bugsnag.getPlugin('react').createErrorBoundary(React)
+Sentry.init({
+    dsn: "https://d62b76f709b441db985aa991c3a3ff3b@o1384900.ingest.sentry.io/6703838",
+    integrations: [new BrowserTracing()],
+    tracesSampleRate: 0.1,
+});
 
 class App extends Component {
     render() {
         return (
-            <ErrorBoundary>
-                <div className='app'>
-                    <Main />
-                </div>
-            </ErrorBoundary>
+            <div className='app'>
+                <Main />
+            </div>
         )
     }
 }

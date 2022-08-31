@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import './Characters.css'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import Bugsnag from '@bugsnag/js'
+import * as Sentry from "@sentry/react"
 
 function CharacterButton(props) {
     if (props.character == null) return
@@ -24,10 +24,6 @@ function Characters() {
     const navigate = useNavigate()
     const [chars, setChars] = useState()
 
-    const bugsnagErrorMetadata = () => {
-        event.addMetadata('character', chars)
-    }
-
     useEffect(() => {
         axios.get('/cards/characters')
         .then((res) => {
@@ -42,15 +38,7 @@ function Characters() {
         })
         .catch((err) => {
             console.log(err)
-            Bugsnag.notify(err)
         })
-
-        //append character info to bugsnag report
-        Bugsnag.addOnError(bugsnagErrorMetadata)
-
-        return () => { //remove on unmount
-            Bugsnag.removeOnError(bugsnagErrorMetadata)
-        }
     }, [])
 
     if (chars != null) {

@@ -1,7 +1,22 @@
 .btn-auth {
-    background-color: rgb(255, 167, 2);
+    background-color: rgb(204, 92, 10);
     color: black;
     padding: 0.5vw;
     border-radius: 0%;
     font-weight: bold;
+    margin-top: 2vh;
+    width: 100%;
+}
+
+.col-centered {
+    float: none !important;
+    margin: 0 auto !important;
+}
+
+.carousel {
+    margin-top: 1vh;
+}
+
+* {
+    text-align: center;
 }

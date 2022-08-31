@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import axios from 'axios'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import Bugsnag from '@bugsnag/js'
+import * as Sentry from "@sentry/react"
 
 function Callback() {
     const navigate = useNavigate()
@@ -21,7 +21,7 @@ function Callback() {
         })
         .catch((err) => {
             console.log(err)
-            Bugsnag.notify(err)
+            Sentry.captureException(err)
             navigate('/auth')
         })
     }

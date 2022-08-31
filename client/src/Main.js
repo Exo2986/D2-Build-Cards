@@ -5,7 +5,7 @@ import React from 'react'
 import Callback from './routes/auth/Callback.js'
 import Cards from './routes/cards/Cards.js'
 import IsAuthenticated from './common/IsAuthenticated.js'
-import Bugsnag from '@bugsnag/js'
+import * as Sentry from "@sentry/react"
 
 class Main extends React.Component {
 
@@ -15,7 +15,7 @@ class Main extends React.Component {
 
     componentDidCatch(error, errorInfo) {
         console.log(error)
-        Bugsnag.notify(error + " " + errorInfo)
+        Sentry.captureException(error + " " + errorInfo)
     }
 
     render() {
