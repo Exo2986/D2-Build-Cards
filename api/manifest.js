@@ -1,8 +1,7 @@
 const sqlite3 = require('sqlite3').verbose()
 const path = require('path')
 const { open } = require('sqlite')
-const winston = require('winston')
-const logger = winston.child({service: 'manifest'})
+const Sentry = require('@sentry/node')
 
 var manifest = {}
 
@@ -65,10 +64,7 @@ manifest.getJSONFromHash = function(hash, table) {
     var id = manifest.idFromHash(hash)
     var query = `SELECT json FROM ${table} WHERE id = ${id}`
 
-    logger.verbose({
-        message: 'Querying manifest.db',
-        query: query
-    })
+    console.log(`Querying manifest.db with ${query}`)
 
     var result = manifest.db.get(query)
 
@@ -77,19 +73,17 @@ manifest.getJSONFromHash = function(hash, table) {
 
 manifest.openDatabaseConnection = function() {
     const profiler = 'Establish connection to manifest.db'
-    logger.profile(profiler)
     open({
         filename: './manifest/manifest.db',
         driver: sqlite3.Database
     })
     .then((db) => {
-        logger.profile(profiler)
         manifest.db = db
     })
 }
 
 manifest.closeDatabaseConnection = function() {
-    logger.info('Closing database connection')
+    console.log('Closing database connection')
     if (manifest.db) manifest.db.close()
 }
 

@@ -7,9 +7,8 @@ var cookieParser = require('cookie-parser');
 var cors = require('cors')
 var config = require('./config.js');
 var api = require('./api.js')
-const winston = require('winston')
-const morgan = require('morgan')
-require('winston-daily-rotate-file')
+const Sentry = require("@sentry/node");
+const SentryTracing = require("@sentry/tracing");
 
 var env = process.env.NODE_ENV || 'development';
 
@@ -34,80 +33,16 @@ if (env == 'production') {
 // var indexRouter = require('./routes/index');
 // var usersRouter = require('./routes/users');
 const manifest = require('./manifest.js');
-const { loggers } = require('winston');
 
 var app = express();
 
 app.use(cors())
 
+Sentry.init({
+  dsn: "https://d62b76f709b441db985aa991c3a3ff3b@o1384900.ingest.sentry.io/6703838",
 
-//logging setup
-var transport = new winston.transports.DailyRotateFile({
-  filename: 'logs/application-%DATE%.log',
-  datePattern: 'YYYY-MM-DD-HH',
-  maxSize: '20m',
-  maxFiles: '14d'
-})
-
-var errTransport = new winston.transports.DailyRotateFile({
-  level: 'error',
-  filename: 'logs/application-error-%DATE%.log',
-  datePattern: 'YYYY-MM-DD-HH',
-  maxSize: '20m',
-  maxFiles: '14d'
-})
-
-var rejectionTransport = new winston.transports.DailyRotateFile({
-  level: 'error',
-  filename: 'logs/application-rejection-%DATE%.log',
-  datePattern: 'YYYY-MM-DD-HH',
-  maxSize: '20m',
-  maxFiles: '14d'
-})
-
-winston.configure({
-  level: 'debug',
-  transports: [
-    transport
-  ],
-  exceptionHandlers: [
-    errTransport
-  ],
-  rejectionHandlers: [
-    rejectionTransport
-  ],
-  format: winston.format.combine(winston.format.timestamp(), winston.format.json(), winston.format.splat())
-})
-
-winston.add(new winston.transports.Console({
-  level: 'http' ? env == 'production' : 'debug',
-  format: winston.format.combine(
-    winston.format.colorize(),
-    winston.format.simple()
-  )
-}));
-
-const morganMiddleware = morgan(
-  function (tokens, req, res) {
-    return JSON.stringify({
-      method: tokens.method(req, res),
-      url: tokens.url(req, res),
-      status: Number.parseFloat(tokens.status(req, res)),
-      content_length: tokens.res(req, res, 'content-length'),
-      response_time: Number.parseFloat(tokens['response-time'](req, res)),
-    });
-  },
-  {
-    stream: {
-      write: (message) => {
-        const data = JSON.parse(message);
-        winston.http(`incoming-request`, data);
-      },
-    },
-  }
-);
-
-app.use(morganMiddleware)
+  tracesSampleRate: 1.0,
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -130,11 +65,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 var authRouter = require('./routes/auth');
 var cardsRouter = require('./routes/cards');
-var loggerRouter = require('./routes/logger')
 
 app.use('/api/auth', authRouter)
 app.use('/api/cards', cardsRouter)
-app.use('/api/logger', loggerRouter)
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -175,7 +108,7 @@ const getManifest = () => {
   })
   .catch(() => {
     //start a panic interval, check for manifest updates much more frequently
-    winston.info('Starting panic interval, checking for manifest updates every 15 minutes.')
+    console.log('Starting panic interval, checking for manifest updates every 15 minutes.')
     setTimeout(getManifest, 1000 * 60 * 60 * 15)
   })
 }
@@ -184,7 +117,7 @@ server.listen(port, () => {
   getManifest()
   setInterval(getManifest, 1000 * 60 * 60 * 24) //run every 24 hours
 
-  winston.info(`Listening on port ${port}`);
+  console.log(`Listening on port ${port}`);
 });
 
 // Redirect from http port 80 to https

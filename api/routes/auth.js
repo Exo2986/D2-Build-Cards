@@ -1,8 +1,7 @@
 var express = require('express');
 var axios = require('axios').default;
 var config = require('./../config.js');
-const winston = require('winston')
-const logger = winston.child({service: 'auth'})
+const Sentry = require('@sentry/node')
 
 var router = express.Router();
 
@@ -47,10 +46,7 @@ router.get('/callback', async function(req, res, next) {
     })
     .catch(function(error) {
         res.status(500)
-        logger.error({
-            message: error,
-            ip: req.ip
-        })
+        Sentry.captureException(error)
     });
 });
 

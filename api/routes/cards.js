@@ -4,8 +4,7 @@ var config = require('./../config.js');
 var manifest = require('./../manifest.js')
 var objects = require('./../objects.js')
 var api = require('./../api.js')
-const winston = require('winston')
-const logger = winston.child({service: 'cards'})
+const Sentry = require('@sentry/node')
 
 const instance = axios.create({
     baseURL: config.d2_api_base_url,
@@ -18,19 +17,19 @@ var router = express.Router();
 
 //make sure that manifest is present
 router.use(function (req, res, next) {
-    logger.verbose('Manifest connection verification middleware called for %s', res.ip)
+    console.log('Manifest connection verification middleware called for %s', res.ip)
     if (manifest.connected()) {
         next()
     } else {
         const error = 'Denied request, manifest.db is not connected.'
-        logger.warn(error)
+        Sentry.captureException(error)
         throw new Error(error)
     }
 })
 
 //make sure that token cookies are present
 router.use(async function (req, res, next) {
-    logger.verbose('Token cookie verification middleware called for %s', res.ip)
+    console.log('Token cookie verification middleware called for %s', res.ip)
     if (!req.signedCookies['access_token']) {
         if (req.signedCookies['refresh_token']) {
             response = await api.refreshAccessToken(req.signedCookies['refresh_token']);
@@ -47,10 +46,7 @@ router.use(async function (req, res, next) {
                 });
             } else {
                 var error = 'Unable to consume refresh token at Bungie.net'
-                logger.error({
-                    message: error,
-                    ip: req.ip
-                })
+                Sentry.captureException(error)
                 next(error)
             }
 
@@ -69,7 +65,7 @@ router.use(async function (req, res, next) {
 
 //make sure that membership cookies are present, create them if not
 router.use(async function (req, res, next) {
-    logger.verbose('Membership cookie verification middleware called for %s', res.ip)
+    console.log('Membership cookie verification middleware called for %s', res.ip)
     if (!req.cookies['membership_type'] || !req.cookies['membership_id']) {
         var membershipInfo = await api.getUserMembershipInfo(req.signedCookies['access_token']);
 
@@ -78,10 +74,7 @@ router.use(async function (req, res, next) {
             res.cookie('membership_id', membershipInfo.membershipId)
         } else {
             const error = 'Unable to retrieve membership info from Bungie.net'
-            logger.error({
-                message: error,
-                ip: req.ip
-            })
+            Sentry.captureException(error)
             throw new Error(error)
         }
 
@@ -99,7 +92,6 @@ router.get('/characters', async function(req, res, next) {
     var accessToken = req.signedCookies['access_token']
     
     const profiler = `Retrieve characters list for user ${membershipId} (${res.ip})`
-    logger.profile(profiler)
 
     instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}`, {
         headers: {
@@ -118,11 +110,7 @@ router.get('/characters', async function(req, res, next) {
             var characterPromise = objects.character(characterData, null, null, true)
             .then((c) => characters.push(c))
             .catch((error) => {
-                console.log('.aff.agaergaergaegrr')
-                logger.error({
-                    message: error,
-                    ip: req.ip
-                })
+                Sentry.captureException(error)
                 next(error)
             })
 
@@ -143,21 +131,14 @@ router.get('/characters', async function(req, res, next) {
             }
             
             res.json(charactersSorted)
-            logger.profile(profiler)
         })
         .catch((error) => {
-            logger.error({
-                message: error,
-                ip: req.ip
-            })
+            Sentry.captureException(error)
             next(error)
         })
     })
     .catch((error) => {
-        logger.error({
-            message: error,
-            ip: req.ip
-        })
+        Sentry.captureException(error)
         next(error)
     })
 })
@@ -168,7 +149,6 @@ router.get('/', async function(req, res, next){
     var accessToken = req.signedCookies['access_token']
 
     const profiler = `Retrieve profile info for user ${membershipId} (${res.ip})`
-    logger.profile(profiler)
 
     instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}/Character/${req.query.character}`, {
         headers: {
@@ -188,21 +168,14 @@ router.get('/', async function(req, res, next){
         objects.character(characterData, characterEquipment, itemComponents)
         .then((character) => {
             res.json({character})
-            logger.profile(profiler)
         })
         .catch(err => {
-            logger.error({
-                message: err,
-                ip: req.ip
-            })
+            Sentry.captureException(err)
             next(err)
         })
     })
     .catch(function(error) {
-        logger.error({
-            message: error,
-            ip: req.ip
-        })
+        Sentry.captureEvent(error)
         next(error)
     });
 });

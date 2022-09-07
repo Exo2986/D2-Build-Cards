@@ -4,8 +4,7 @@ var extract = require('extract-zip')
 var path = require('path')
 var manifest = require('./manifest.js')
 var fs = require('fs')
-const winston = require('winston')
-const logger = winston.child({service: 'api'})
+const Sentry = require('@sentry/node')
 
 var api = {}
 
@@ -45,7 +44,7 @@ api.refreshAccessToken = async function (refreshToken) {
         };
     })
     .catch(function(error) {
-        logger.error(error)
+        Sentry.captureException(error)
     });
 
     return returnInfo;
@@ -65,13 +64,10 @@ api.getUserMembershipInfo = async function (accessToken) {
             membershipId: response.data.Response.destinyMemberships[0].membershipId
         }
 
-        logger.info({
-            message: 'Retrieved membership info',
-            ...membershipInfo
-        })
+        console.log(`Retrieved membership info (Type: ${membershipInfo.membershipType}) (ID: ${membershipInfo.membershipId})`)
     })
     .catch(function (error) {
-        logger.error(error)
+        Sentry.captureException(error)
     })
 
     return membershipInfo;
@@ -87,7 +83,7 @@ api.getManifest = function () {
             var shouldUpdate = shouldManifestUpdate(manifestPath)
 
             if (!shouldUpdate) {
-                logger.info('Manifest %s does not need to be updated. (%s)', api.manifestInfo.fileName, manifestPath)
+                console.log('Manifest %s does not need to be updated. (%s)', api.manifestInfo.fileName, manifestPath)
                 fulfill(false)
                 return
             }
@@ -106,22 +102,22 @@ api.getManifest = function () {
                         renameManifestDatabase()
                         updateManifestInfoFile(manifestPath)
                         
-                        logger.info('Successfully acquired manifest from %s', manifestUrl)
+                        console.log('Successfully acquired manifest from %s', manifestUrl)
                         fulfill(true)
                     })
                     .catch((err) => {
-                        logger.error(err)
+                        Sentry.captureException(err)
                         reject(err)
                     })
                 })
             })
             .catch(function(error) {
-                logger.error(error)
+                Sentry.captureException(error)
                 reject(error)
             })
         })
         .catch(function(error) {
-            logger.error(error)
+            Sentry.captureException(error)
             reject(error)
         })
     })
@@ -180,7 +176,7 @@ function renameManifestDatabase() {
         fs.renameSync(
             path.join(manifestPath, file),
             path.join(manifestPath, 'manifest.db'),
-            err => logger.error(err)
+            err => Sentry.captureException(err)
         )
     })
 }
@@ -191,10 +187,7 @@ function readManifestInfo() {
     if (fs.existsSync(manifestInfoPath)) {
         const fileData = fs.readFileSync(manifestInfoPath, {encoding:'utf8', flag:'r'})
         const jsonFileData = JSON.parse(fileData)
-        logger.info({
-            message: 'Read manifest_info.json',
-            ...jsonFileData
-        })
+        console.log('Read manifest_info.json')
         return jsonFileData
 
     } else {
@@ -207,7 +200,7 @@ function updateManifestInfoFile(fileName) {
         fileName: fileName,
         lastChecked: Date.now()
     }
-    fs.writeFile(path.join(manifestPath, 'manifest_info.json'), JSON.stringify(api.manifestInfo), (err) => logger.error(err))
+    fs.writeFile(path.join(manifestPath, 'manifest_info.json'), JSON.stringify(api.manifestInfo), (err) => Sentry.captureException(err))
 }
 
 
@@ -227,7 +220,7 @@ function deleteOldManifest() {
             }
         })
     } catch (err) {
-        logger.error(err)
+        Sentry.captureException(err)
         return false
     }
 

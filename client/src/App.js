@@ -5,7 +5,7 @@ import axios from 'axios'
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 
-var env = 'dev'
+var env = 'production'
 
 if (env == 'production')
     axios.defaults.baseURL = 'https://d2buildcards.com/api'

@@ -103,6 +103,7 @@
     font-size: 40pt;
     margin: 0;
     padding: 0;
+    text-align: left;
 }
 
 .item-mods {
@@ -296,6 +297,10 @@
     font-size: 30pt;
     width: 100%;
     text-align: center;
+}
+
+.item-mods p {
+    text-align: right;
 }
 
 .ability-icon {

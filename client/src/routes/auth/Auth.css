@@ -6,6 +6,7 @@
     font-weight: bold;
     margin-top: 2vh;
     width: 100%;
+    text-align: center;
 }
 
 .col-centered {
@@ -17,6 +18,6 @@
     margin-top: 1vh;
 }
 
-* {
+.col-centered h2 {
     text-align: center;
 }
