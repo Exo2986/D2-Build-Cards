@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Stack, Button } from 'react-bootstrap'
 import Loading from '../../common/Loading.js'
-import 'bootstrap/dist/css/bootstrap.min.css'
 import './Characters.css'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import * as Sentry from "@sentry/react"
+import { Box, CircularProgress, Stack } from '@mui/material'
 
 function CharacterButton(props) {
     if (props.character == null) return
@@ -13,7 +12,7 @@ function CharacterButton(props) {
     return (
         <div className='character-button'>
             <Link to={`/cards/card?character=${props.character.id}`} className='character-link'>
-                <img src={props.character.emblemBackground}/>
+                <img src={props.character.emblemBackground} onLoad={props.counter}/>
                 <p>{props.character.class.toUpperCase()}</p>
             </Link>
         </div>
@@ -23,6 +22,7 @@ function CharacterButton(props) {
 function Characters() {
     const navigate = useNavigate()
     const [chars, setChars] = useState()
+    const [imagesLoaded, setImagesLoaded] = useState()
 
     useEffect(() => {
         axios.get('/cards/characters')
@@ -41,19 +41,29 @@ function Characters() {
         })
     }, [])
 
+    var charBanners = <></>
+
     if (chars != null) {
-        return (
-            <Stack direction='vertical' gap={4} className='d-flex min-vh-100 justify-content-center align-items-center'>
-                {chars.map((char) => <CharacterButton character={char}/>)}
+        var sx = {display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', minWidth:'100vw'}
+
+        if (imagesLoaded < 3) {
+            sx.display = 'none'
+        }
+        charBanners = 
+            <Stack gap={4} sx={sx}>
+                {chars.map((char) => <CharacterButton character={char} counter={() => setImagesLoaded(imagesLoaded+1)}/>)}
             </Stack>
-        )
-    } else {
-        return(
-            <div className='d-flex align-items-center justify-content-center min-vh-100 min-vw-100'>
-                <Loading/>
-            </div>
-        )
     }
+
+    const progressDisplay = imagesLoaded >= 3 ? 'none' : 'flex'
+
+    return(
+        
+        <Box sx={{display:progressDisplay, alignItems:'center', justifyContent:'center', minHeight:'100vh', minWidth:'100vw'}}>
+            <CircularProgress/>
+            {charBanners}
+        </Box>
+    )
 }
 
 export default Characters

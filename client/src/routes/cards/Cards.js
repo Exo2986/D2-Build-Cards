@@ -1,9 +1,7 @@
-import { Stack, Container, Row, Col, Button, Form, Modal } from "react-bootstrap"
+import { Stack, Box, TextField, Button, Grid, Select, MenuItem, InputLabel, Dialog, DialogTitle, DialogContent, DialogContentText, CircularProgress, Typography } from "@mui/material"
 import './Cards.css'
-import Loading from '../../common/Loading.js'
 import axios from 'axios'
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { useLocation } from 'react-router-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import * as htmlToImage from 'html-to-image';
 import FileSaver, { saveAs } from "file-saver"
@@ -30,7 +28,7 @@ function ItemIcon(props) {
 
 function CharacterStat(props) {
     return (
-        <Stack direction='horizontal' gap={1} className='stat-stack'>
+        <Stack direction='row' spacing={1} className='stat-stack'>
             <p className='stat-number'>{props.stat.value}</p>
             <img src={props.stat.icon} className='stat-icon'/>
         </Stack>
@@ -39,7 +37,7 @@ function CharacterStat(props) {
  
 function CharacterStats(props) {
     return (
-        <Stack gap={1} id='card-stats'>
+        <Stack spacing={1} id='card-stats'>
             <CharacterStat stat={props.stats.Mobility}/>
             <CharacterStat stat={props.stats.Resilience}/>
             <CharacterStat stat={props.stats.Recovery}/>
@@ -52,16 +50,16 @@ function CharacterStats(props) {
 
 function ArmorItem(props) {
     return (
-        <Stack direction='horizontal' gap={1} className='armor-item translucent-background'>
+        <Stack direction='row' spacing={1} className='armor-item translucent-background'>
             <ItemIcon icon_url={props.item.icon}/>
-            <Stack gap={0}>
+            <Stack spacing={0}>
                 <p className='item-name'>{props.item.displayName}</p>
-                <Stack direction='horizontal' gap={1} className='mod-icon-stack'>
+                <Stack direction='row' gap={1} className='mod-icon-stack'>
                     {props.item.mods.map(mod => <ModIcon icon_url={mod.icon}/>)}
                 </Stack>
             </Stack>
-            <Stack className='item-mods'>
-                {props.item.mods.slice(1).map(mod => <p className='text-truncate'>{mod.displayName}</p>)}    
+            <Stack className='item-mods' sx={{width:'100%', display:'flex', justifyContent:'center'}}>
+                {props.item.mods.slice(1).map(mod => <Typography variant='body' component='p' noWrap>{mod.displayName}</Typography>)}    
             </Stack>
         </Stack>
     )
@@ -69,11 +67,11 @@ function ArmorItem(props) {
 
 function WeaponItem(props) {
     return (
-        <Stack direction='horizontal' gap={1} className='weapon-item translucent-background'>
+        <Stack direction='row' spacing={1} className='weapon-item translucent-background'>
             <ItemIcon icon_url={props.item.icon}/>
-            <Stack gap={0}>
-                <p className='item-name text-truncate'>{props.item.displayName}</p>
-                <Stack direction='horizontal' gap={1} className='perk-icon-stack'>
+            <Stack spacing={0}>
+                <Typography className='item-name' noWrap variant='body' component='p'>{props.item.displayName}</Typography>
+                <Stack direction='row' spacing={1} className='perk-icon-stack'>
                     {props.item.perks.map(perk => <WeaponPerkIcon icon_url={perk.icon}/>)}
                 </Stack>
             </Stack>
@@ -105,26 +103,26 @@ function AspectIcon(props) {
 
 function FragmentIcon(props) {
     return (
-        <Stack gap={1}  className='fragment-icon'>
+        <Stack spacing={1} className='fragment-icon'>
             <img src={props.icon_url}/>
-            <p className='text-truncate'>{props.name}</p>
+            <Typography variant='body' component='p' noWrap>{props.name}</Typography>
         </Stack>
     )
 }
 
 function Subclass(props) {
     return (
-        <Stack direction='horizontal' gap={1} id='card-subclass' className='translucent-background'>
+        <Stack direction='row' spacing={1} id='card-subclass' className='translucent-background'>
             <SubclassIcon icon_url={props.subclass.abilities.super.icon}/>
-            <Stack direction='vertical' gap={1} id='aspect-fragment-stack'>
-                <Stack direction='horizontal' gap={1} id='aspects-stack'>
+            <Stack id='aspect-fragment-stack'>
+                <Stack direction='row' id='aspects-stack'>
                     <AbilityIcon icon_url={props.subclass.abilities.class_ability.icon}/>
                     <AbilityIcon icon_url={props.subclass.abilities.jump.icon}/>
                     <AbilityIcon icon_url={props.subclass.abilities.melee.icon}/>
                     <AbilityIcon icon_url={props.subclass.abilities.grenade.icon}/>
                     {props.subclass.aspects.map(aspect => <AspectIcon icon_url={aspect.icon}/>)}
                 </Stack>
-                <Stack direction='horizontal' gap={1} id='fragments-stack'>
+                <Stack direction='row' id='fragments-stack'>
                     {props.subclass.fragments.map(fragment => {
                         if (fragment.isEnabled && fragment.isVisible) {
                             return (<FragmentIcon icon_url={fragment.icon} name={lastWord(fragment.displayName)}/>)
@@ -142,23 +140,25 @@ function CardHeader(props) {
     const authorFitText = useFitText({maxFontSize:1000})
     const authorFontSize = authorFitText.fontSize
 
+    const authorMarginBottom = Math.max(30-(1500-titleFontSize.replace('%', ''))/2, 10)
+    console.log(`${authorMarginBottom}px`)
     return (
-        <Stack direction='horizontal' gap={1} id='card-header' className='translucent-background'>
+        <Stack direction='row' spacing={1} id='card-header' className='translucent-background'>
             <p id='card-title' style={{fontSize: titleFontSize}} ref={titleFitText.ref}>{props.title}</p>
-            <p id='card-author' style={{fontSize: authorFontSize}} ref={authorFitText.ref}>by {props.author}</p>
-            <p id='card-credit'>d2buildcards.com</p>
+            <p id='card-author' style={{fontSize: authorFontSize, marginBottom:`${authorMarginBottom}px`}} ref={authorFitText.ref}>by {props.author}</p>
+            <p id='card-credit' style={{marginBottom:`${authorMarginBottom}px`}}>d2buildcards.com</p>
         </Stack>
     )
 }
 
 function CardBody(props) {
     return (
-        <Stack direction='horizontal' id='card-body'>
+        <Stack direction='row' id='card-body'>
             <div id='card-armor'>
                 {props.character.armor.map(item => <ArmorItem item={item}/>)}
             </div>
-            <Stack direction='vertical' id='card-body-vertical'>
-                <Stack direction='horizontal' id='card-body-weapons-stats'>
+            <Stack id='card-body-vertical'>
+                <Stack direction='row' id='card-body-weapons-stats'>
                     <div id='card-weapons'>
                         {props.character.weapons.map(item => <WeaponItem item={item}/>)}
                     </div>
@@ -173,40 +173,32 @@ function CardBody(props) {
 function DownloadImageModal({ show, handleClose, imageURL, downloadName, isFileSaverSupported }) {
     if (imageURL == null) {
         return (
-            <Modal show={show} onHide={handleClose} size='lg' centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Loading build card</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <div className='loading'>
-                        <Loading/>
-                    </div>
-                </Modal.Body>
-            </Modal>
+            <Dialog open={show} onClose={handleClose}>
+                <DialogTitle>Loading build card</DialogTitle>
+                <DialogContent sx={{display:'flex', alignItems:'center', justifyContent:'center'}}>
+                    <CircularProgress/>
+                </DialogContent>
+            </Dialog>
         )
     } else if (!isFileSaverSupported) {
         return(
-            <Modal show={show} onHide={handleClose} size='lg' centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Error</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>File saving is not supported on this browser.</p>
-                </Modal.Body>
-            </Modal>
+            <Dialog open={show} onClose={handleClose}>
+                <DialogTitle>Error</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>File saving is not supported on this browser.</DialogContentText>
+                </DialogContent>
+            </Dialog>
         )
     } else {
         return(
-            <Modal show={show} onHide={handleClose} size='lg' centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Download build card</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <img src={imageURL} className='download-image'></img>
-                    <hr/>
-                    <p>Your image should be downloading. If not, click <a href={imageURL} download={downloadName}>here</a>.</p>
-                </Modal.Body>
-            </Modal>
+            <Dialog open={show} onClose={handleClose}>
+                <DialogTitle>Download build card</DialogTitle>
+                <DialogContent>
+                     <img src={imageURL} className='download-image'></img>
+                     <hr/>
+                    <DialogContentText>Your image should be downloading. If not, click <a href={imageURL} download={downloadName}>here</a>.</DialogContentText>
+                </DialogContent>
+            </Dialog>
         )
     }
 }
@@ -257,19 +249,33 @@ function SaveAsModal(props) {
         const fileType = fileTypeRef.current.value
         const resolution = resolutionMap[resolutionRef.current.value]
 
+        console.log(fileType)
+        console.log(resolutionRef.current.value)
+        console.log(resolution)
+
         const saveFunc = saveFuncMap[fileType]
+        const imageSettings = {cacheBust:true, canvasWidth: resolution.width, canvasHeight: resolution.height, pixelRatio: 1}
 
-        saveFunc(props.cardParent.current, {cacheBust:true, canvasWidth: resolution.width, canvasHeight: resolution.height, pixelRatio: 1})
-        .then(dataUrl => {  
-            props.setImageDownloadURL(dataUrl)
+        saveFunc(props.cardParent.current, imageSettings)
+        .then(url => {  
+            var img = document.createElement('img')
+            img.src = url
+            img.style.display = 'none'
+
+            img.onload = () => {
+                saveFunc(props.cardParent.current, imageSettings)
+                .then(dataUrl => {
+                    props.setImageDownloadURL(dataUrl)
             
-            var fileName = props.cardTitle.toLowerCase().replaceAll(' ', '-')
-            fileName = fileName.replace(/[^a-zA-Z0-9\-_]/g, '') //only allow alphanumeric characters mostly
-            fileName += '.' + fileType
+                    var fileName = props.cardTitle.toLowerCase().replaceAll(' ', '-')
+                    fileName = fileName.replace(/[^a-zA-Z0-9\-_]/g, '') //only allow alphanumeric characters mostly
+                    fileName += '.' + fileType
 
-            props.setDownloadName(fileName)
+                    props.setDownloadName(fileName)
 
-            FileSaver.saveAs(dataUrl, fileName)
+                    FileSaver.saveAs(dataUrl, fileName)
+                })
+            }
         })
         .catch(err => {
             console.log(err)
@@ -278,49 +284,49 @@ function SaveAsModal(props) {
     }
 
     return(
-        <Modal show={props.show} onHide={props.handleClose} size='lg' centered>
-            <Modal.Header closeButton>
-                <Modal.Title>Save as...</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Form>
-                    <Form.Group className='mb-3' controlId='formFileType'>
-                        <Form.Label>File type</Form.Label>
-                        <Form.Select aria-label='Select a file type' ref={fileTypeRef}>
-                            <option value='png' selected>.png</option>
-                            <option value='jpg'>.jpg</option>
-                        </Form.Select>
-                    </Form.Group>
+        <Dialog open={props.show} onClose={props.handleClose}>
+            <DialogTitle>Save as...</DialogTitle>
+            <DialogContent>
+                <Stack spacing={1}>
+                    <InputLabel id='select-file-type-input-label' sx={{width:'50vw'}}>File Type</InputLabel>
+                    <Select
+                        labelId='select-file-type-input-label'
+                        id='fileTypeInput'
+                        label='File Type'
+                        inputRef={fileTypeRef}
+                        mb={3}
+                    >
+                        <MenuItem value='png' selected>.png</MenuItem>
+                        <MenuItem value='jpg'>.jpg</MenuItem>
+                    </Select>
 
-                    <Form.Group className='mb-3' controlId='formResolution'>
-                        <Form.Label>Resolution</Form.Label>
-                        <Form.Select aria-label='Select a resolution' ref={resolutionRef}>
-                            {Object.keys(resolutionMap).map((key) => <option value={key} selected={key == '1080p'}>{key}</option>)}
-                        </Form.Select>
-                    </Form.Group>
+                    <InputLabel id='select-resolution-input-label' sx={{width:'50vw'}}>Resolution</InputLabel>
+                    <Select 
+                        labelId='select-resolution-input-label'
+                        id='resolutionInput'
+                        label='Resolution'
+                        inputRef={resolutionRef}
+                        mb={3}
+                    >
+                        {Object.keys(resolutionMap).map((key) => <MenuItem value={key} selected={key == '1080p'}>{key}</MenuItem>)}
+                    </Select>
 
-                    <Button variant='primary' onClick={saveAsImage}>
+                    <Button variant='contained' onClick={saveAsImage} sx={{marginTop:'3'}}>
                         Save
                     </Button>
-                </Form>
-            </Modal.Body>
-        </Modal>
+                </Stack>
+            </DialogContent>
+        </Dialog>
     )
 }
 
 function SettingsBox(props) {
     return (
-        <div id='settings-box' className='col-10 col-lg-6 col-centered'>
-            <Button onClick={() => {props.setShowSaveAsModal(true)}}>Save as...</Button>
-            <Form.Group>
-                <Form.Label>Build Name</Form.Label>
-                <Form.Control value={props.cardTitle} onChange={(e) => props.setCardTitle(e.target.value)}></Form.Control>
-            </Form.Group>
-            <Form.Group>
-                <Form.Label>Author</Form.Label>
-                <Form.Control value={props.cardAuthor} onChange={(e) => props.setCardAuthor(e.target.value)}></Form.Control>
-            </Form.Group>
-        </div>
+        <Stack spacing={2} id='settings-box' sx={{width:'100%', height:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}>
+            <TextField variant='filled' sx={{width:'100%'}} value={props.cardTitle} onChange={(e) => props.setCardTitle(e.target.value)}/>
+            <TextField variant='filled' sx={{width:'100%'}} value={props.cardAuthor} onChange={(e) => props.setCardAuthor(e.target.value)}/>
+            <Button variant='contained' onClick={() => {props.setShowSaveAsModal(true)}}>Save as...</Button>
+        </Stack>
     )
 }
 
@@ -396,22 +402,20 @@ function Cards() {
     if(character) {
         return (
             <>
-                <Container fluid id='main'>
-                    <Row className='w-100 mt-5 mb-3'>
+                <Grid container id='main' disableEqualOverflow sx={{display:'flex', justifyContent:'center', alignItems:'center', rowGap: 1}}>
+                    <Grid xs={10} lg={7} sx={{display:'flex', justifyContent:'center', alignItems:'center'}}>
                         <SettingsBox {...{cardTitle, setCardTitle, cardAuthor, setCardAuthor, setShowSaveAsModal }}
                         />
-                    </Row>
-                    <Row className='w-100 p-0'>
-                        <Col className='col-lg-6 col-10 col-centered p-0' ref={cardColumn}>
-                            <div id='card-scalar' style={{'transform': `scale(${cardColumnWidth/3840})`}}>
-                                <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
-                                    <CardHeader author={cardAuthor} title={cardTitle}/>
-                                    <CardBody character={character}/>
-                                </div>
+                    </Grid>
+                    <Grid ref={cardColumn} xs={10} lg={7}>
+                        <div id='card-scalar' style={{'transform': `scale(${cardColumnWidth/3840})`}}>
+                            <div id='card-parent' style={{backgroundImage: `url(\'${character.subclass.screenshot}\')`}} ref={cardParent}>
+                                <CardHeader author={cardAuthor} title={cardTitle}/>
+                                <CardBody character={character}/>
                             </div>
-                        </Col>
-                    </Row>
-                </Container>
+                        </div>
+                    </Grid>
+                </Grid>
                 <DownloadImageModal 
                     show={showDownloadModal} 
                     handleClose={() => setShowDownloadModal(false)} 
@@ -428,9 +432,9 @@ function Cards() {
         )
     } else {
         return (    
-                <div className='d-flex align-items-center justify-content-center' id='main'>
-                    <Loading/>
-                </div>
+                <Box sx={{width:'100vw', height:'100vh', display:'flex', justifyContent:'center', alignItems:'center'}} id='main'>
+                    <CircularProgress/>
+                </Box>
             )
     }
 }

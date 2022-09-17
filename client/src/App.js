@@ -5,6 +5,8 @@ import axios from 'axios'
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
 var env = 'production'
 
 if (env == 'production')
@@ -18,11 +20,19 @@ Sentry.init({
     tracesSampleRate: 0.1,
 });
 
+const theme = createTheme({
+    palette: {
+        mode: 'dark'
+    }
+})
+
 class App extends Component {
     render() {
         return (
             <div className='app'>
-                <Main />
+                <ThemeProvider theme={theme}>
+                    <Main />
+                </ThemeProvider>
             </div>
         )
     }
