@@ -7,7 +7,7 @@ import { BrowserTracing } from "@sentry/tracing";
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-var env = 'production'
+var env = 'dev'
 
 if (env == 'production')
     axios.defaults.baseURL = 'https://d2buildcards.com/api'

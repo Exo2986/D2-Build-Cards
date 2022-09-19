@@ -104,6 +104,9 @@
     margin: 0;
     padding: 0;
     text-align: left;
+    white-space: nowrap !important;
+    overflow: hidden  !important;
+    text-overflow: ellipsis !important;
 }
 
 .item-mods {

@@ -22,7 +22,7 @@ function CharacterButton(props) {
 function Characters() {
     const navigate = useNavigate()
     const [chars, setChars] = useState()
-    const [imagesLoaded, setImagesLoaded] = useState()
+    const [imagesLoaded, setImagesLoaded] = useState(0)
 
     useEffect(() => {
         axios.get('/cards/characters')
@@ -48,19 +48,20 @@ function Characters() {
 
         if (imagesLoaded < 3) {
             sx.display = 'none'
+            console.log(sx.display)
         }
         charBanners = 
             <Stack gap={4} sx={sx}>
-                {chars.map((char) => <CharacterButton character={char} counter={() => setImagesLoaded(imagesLoaded+1)}/>)}
+                {chars.map((char) => <CharacterButton character={char} counter={() => setImagesLoaded((value) => value+1)}/>)}
             </Stack>
     }
 
-    const progressDisplay = imagesLoaded >= 3 ? 'none' : 'flex'
+    const progressDisplay = imagesLoaded >= 3 ? 'none' : 'block'
 
     return(
         
-        <Box sx={{display:progressDisplay, alignItems:'center', justifyContent:'center', minHeight:'100vh', minWidth:'100vw'}}>
-            <CircularProgress/>
+        <Box sx={{display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', minWidth:'100vw'}}>
+            <CircularProgress sx={{display: progressDisplay}}/>
             {charBanners}
         </Box>
     )
