@@ -7,6 +7,7 @@ import * as htmlToImage from 'html-to-image';
 import FileSaver, { saveAs } from "file-saver"
 import useFitText from "use-fit-text"
 import * as Sentry from "@sentry/react"
+import ImagesLoading from "../../common/ImagesLoading"
 
 function ModIcon(props) {
     return (
@@ -343,6 +344,7 @@ function Cards() {
     const [imageDownloadURL, setImageDownloadURL] = useState()
     const [downloadName, setDownloadName] = useState()
     const [isFileSaverSupported, setIsFileSaverSupported] = useState(true)
+    const [imagesLoaded, setImagesLoaded] = useState(0)
 
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
@@ -399,8 +401,11 @@ function Cards() {
         getCharacterInfo()
     }, []) //run on mount
 
+    var body = <></>
+
     if(character) {
-        return (
+        body = 
+        (
             <>
                 <Grid container id='main' disableEqualOverflow sx={{display:'flex', justifyContent:'center', alignItems:'center', rowGap: 1}}>
                     <Grid xs={10} lg={7} sx={{display:'flex', justifyContent:'center', alignItems:'center'}}>
@@ -430,13 +435,13 @@ function Cards() {
                 />
             </>
         )
-    } else {
-        return (    
-                <Box sx={{width:'100vw', height:'100vh', display:'flex', justifyContent:'center', alignItems:'center'}} id='main'>
-                    <CircularProgress/>
-                </Box>
-            )
     }
+
+    return (
+        <ImagesLoading imagesAreLoading={character != false} imagesLoaded={imagesLoaded} setImagesLoaded={setImagesLoaded}>
+            {body}
+        </ImagesLoading>
+    )
 }
 
 export default Cards

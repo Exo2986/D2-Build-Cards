@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import * as Sentry from "@sentry/react"
 import { Box, CircularProgress, Stack } from '@mui/material'
+import ImagesLoading from '../../common/ImagesLoading.js'
 
 function CharacterButton(props) {
     if (props.character == null) return
@@ -12,7 +13,7 @@ function CharacterButton(props) {
     return (
         <div className='character-button'>
             <Link to={`/cards/card?character=${props.character.id}`} className='character-link'>
-                <img src={props.character.emblemBackground} onLoad={props.counter}/>
+                <img src={props.character.emblemBackground}/>
                 <p>{props.character.class.toUpperCase()}</p>
             </Link>
         </div>
@@ -46,24 +47,17 @@ function Characters() {
     if (chars != null) {
         var sx = {display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', minWidth:'100vw'}
 
-        if (imagesLoaded < 3) {
-            sx.display = 'none'
-            console.log(sx.display)
-        }
         charBanners = 
             <Stack gap={4} sx={sx}>
-                {chars.map((char) => <CharacterButton character={char} counter={() => setImagesLoaded((value) => value+1)}/>)}
+                {chars.map((char) => <CharacterButton character={char}/>)}
             </Stack>
     }
 
-    const progressDisplay = imagesLoaded >= 3 ? 'none' : 'block'
-
     return(
         
-        <Box sx={{display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', minWidth:'100vw'}}>
-            <CircularProgress sx={{display: progressDisplay}}/>
+        <ImagesLoading imagesAreLoading={chars != null} imagesLoaded={imagesLoaded} setImagesLoaded={setImagesLoaded}>
             {charBanners}
-        </Box>
+        </ImagesLoading>
     )
 }
 
