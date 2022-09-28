@@ -6,6 +6,7 @@ import axios from 'axios'
 import * as Sentry from "@sentry/react"
 import { Box, CircularProgress, Stack } from '@mui/material'
 import ImagesLoading from '../../common/ImagesLoading.js'
+import AlertSnackbar from '../../common/AlertSnackbar.js'
 
 function CharacterButton(props) {
     if (props.character == null) return
@@ -24,6 +25,7 @@ function Characters() {
     const navigate = useNavigate()
     const [chars, setChars] = useState()
     const [imagesLoaded, setImagesLoaded] = useState(0)
+    const [alertSnackbar, setAlertSnackbar] = useState()
 
     useEffect(() => {
         axios.get('/cards/characters')
@@ -54,10 +56,12 @@ function Characters() {
     }
 
     return(
-        
-        <ImagesLoading imagesAreLoading={chars != null} imagesLoaded={imagesLoaded} setImagesLoaded={setImagesLoaded}>
-            {charBanners}
-        </ImagesLoading>
+        <>
+            <ImagesLoading imagesAreLoading={chars != null} imagesLoaded={imagesLoaded} setImagesLoaded={setImagesLoaded}>
+                {charBanners}
+            </ImagesLoading>
+            <AlertSnackbar timeout={8000} message='Unable to reach Bungie.net' alertLevel='error' referenceValue={chars}/>
+        </>
     )
 }
 

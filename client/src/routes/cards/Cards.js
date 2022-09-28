@@ -8,6 +8,7 @@ import FileSaver, { saveAs } from "file-saver"
 import useFitText from "use-fit-text"
 import * as Sentry from "@sentry/react"
 import ImagesLoading from "../../common/ImagesLoading"
+import AlertSnackbar from "../../common/AlertSnackbar"
 
 function ModIcon(props) {
     return (
@@ -389,14 +390,6 @@ function Cards() {
 
     const cardParent = useRef(null)
 
-    const updateCardTitle = (event) => {
-        setCardTitle(event.target.value)
-    }
-
-    const updateCardAuthor = (event) => {
-        setCardAuthor(event.target.value)
-    }
-
     useEffect(() => {
         getCharacterInfo()
     }, []) //run on mount
@@ -438,9 +431,12 @@ function Cards() {
     }
 
     return (
-        <ImagesLoading imagesAreLoading={character != false} imagesLoaded={imagesLoaded} setImagesLoaded={setImagesLoaded}>
-            {body}
-        </ImagesLoading>
+        <div>
+            <ImagesLoading imagesAreLoading={character != false} imagesLoaded={imagesLoaded} setImagesLoaded={setImagesLoaded}>
+                {body}
+            </ImagesLoading>
+            <AlertSnackbar timeout={8000} message='Unable to reach Bungie.net' alertLevel='error' referenceValue={character}/>
+        </div>
     )
 }
 
