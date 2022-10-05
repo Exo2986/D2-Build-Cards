@@ -9,6 +9,8 @@ import useFitText from "use-fit-text"
 import * as Sentry from "@sentry/react"
 import ImagesLoading from "../../common/ImagesLoading"
 import AlertSnackbar from "../../common/AlertSnackbar"
+import masterworkImg from "./masterwork.png"
+import exoticMasterworkImg from './exotic-masterwork.png'
 
 function ModIcon(props) {
     return (
@@ -24,7 +26,10 @@ function WeaponPerkIcon(props) {
 
 function ItemIcon(props) {
     return (
-        <img src={props.icon_url} className='item-icon'></img>
+        <div className='item-icon-div'>
+            <img src={props.icon_url} className='item-icon'/>
+            {props.masterwork ? <img src={props.tierType == 'Exotic' ? exoticMasterworkImg : masterworkImg} className='masterwork'/> : <></>}
+        </div>
     )
 }
 
@@ -53,9 +58,9 @@ function CharacterStats(props) {
 function ArmorItem(props) {
     return (
         <Stack direction='row' spacing={1} className='armor-item translucent-background'>
-            <ItemIcon icon_url={props.item.icon}/>
+            <ItemIcon icon_url={props.item.icon} masterwork={props.item.masterwork == 1} tierType={props.item.tierType}/>
             <Stack spacing={0}>
-                <p className='item-name'>{props.item.displayName}</p>
+                <p className='item-name'><img src={props.item.energyIcon}/>{props.item.displayName}</p>
                 <Stack direction='row' gap={1} className='mod-icon-stack'>
                     {props.item.mods.map(mod => <ModIcon icon_url={mod.icon}/>)}
                 </Stack>
@@ -70,7 +75,7 @@ function ArmorItem(props) {
 function WeaponItem(props) {
     return (
         <Stack direction='row' spacing={1} className='weapon-item translucent-background'>
-            <ItemIcon icon_url={props.item.icon}/>
+            <ItemIcon icon_url={props.item.icon} masterwork={props.item.masterwork == 1} tierType={props.item.tierType}/>
             <Stack spacing={0}>
                 <Typography className='item-name' noWrap variant='body' component='p'>{props.item.displayName}</Typography>
                 <Stack direction='row' spacing={1} className='perk-icon-stack'>
@@ -379,6 +384,7 @@ function Cards() {
             } else {
                 if (res.data.character){
                     setCharacter(res.data.character)
+                    console.log(character)
                 }
             }
         })

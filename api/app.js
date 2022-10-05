@@ -9,6 +9,7 @@ var config = require('./config.js');
 var api = require('./api.js')
 const Sentry = require("@sentry/node");
 const SentryTracing = require("@sentry/tracing");
+const package = require('./package.json')
 
 var env = process.env.NODE_ENV || 'development';
 
@@ -42,6 +43,7 @@ Sentry.init({
   dsn: "https://d62b76f709b441db985aa991c3a3ff3b@o1384900.ingest.sentry.io/6703838",
 
   tracesSampleRate: 1.0,
+  release: `${package.name}@(${package.version})`
 });
 
 // view engine setup

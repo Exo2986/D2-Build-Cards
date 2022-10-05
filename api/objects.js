@@ -84,6 +84,7 @@ objects.character = function(characterData, characterEquipment, itemComponents, 
                     var itemComponentsData = {
                         stats: itemComponents.stats.data[item.itemInstanceId].stats,
                         sockets: itemComponents.sockets.data[item.itemInstanceId].sockets,
+                        instance: itemComponents.instances.data[item.itemInstanceId]
                     }
     
                     character.armor.push(await objects.armor(item, itemComponentsData).catch((err) => reject(err)))
@@ -221,6 +222,12 @@ objects.weapon = function(itemData, itemComponentsData) {
             //weapon display properties
             weapon.displayName = weapon.json.displayProperties.name
             weapon.icon = bungieResourcePath(weapon.json.displayProperties.icon)
+            weapon.tierType = weapon.json.inventory.tierTypeName
+
+            //itemstates
+            var itemState = itemData.state
+            weapon.masterwork = (itemState >> 2) & 1 //itemstate bitmask is 4
+            weapon.masterworkTest = (itemState >> 2)
     
             //weapon perks and mods
             var sockets = []
@@ -324,6 +331,18 @@ objects.armor = function(itemData, itemComponentsData) {
             //armor display properties
             armor.displayName = armor.json.displayProperties.name
             armor.icon = bungieResourcePath(armor.json.displayProperties.icon)
+            armor.tierType = armor.json.inventory.tierTypeName
+
+            //armor energy type
+            var energyTypeJson = await manifest.getJSONFromHash(itemComponentsData.instance.energy.energyTypeHash, manifest.manifestTables.EnergyType)
+            .catch((err) => reject(err))
+            energyTypeJson = JSON.parse(energyTypeJson.json)
+            armor.energyIcon = bungieResourcePath(energyTypeJson.displayProperties.icon)
+
+            //armor itemstates
+            var itemState = itemData.state
+            armor.masterwork = (itemState >> 2) & 1 //itemstate bitmask is 4
+            armor.masterworkTest = (itemState >> 2)
     
             //armor stats
             armor.stats = []
@@ -370,10 +389,10 @@ objects.armor = function(itemData, itemComponentsData) {
             //Here we just check if each plugCategoryHash is contained somewhere in perkSocketTypes. If it is, then we keep it.
             for (var socket of sockets) {
                 var plugCategoryHash = socket.json.plug.plugCategoryHash
+                var found = false
     
                 for (var socketType of modSocketTypes) {
                     var whitelist = socketType.plugWhitelist
-                    var found = false
     
                     for (var item of whitelist) {
                         if (item.categoryHash == plugCategoryHash && socket.json.plug.plugCategoryIdentifier.includes('enhancements')) {

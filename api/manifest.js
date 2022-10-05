@@ -24,6 +24,7 @@ manifest.manifestTables = {
     Destination:                 'DestinyDestinationDefinition',
     EnemyRace:                   'DestinyEnemyRaceDefinition',
     EquipmentSlot:               'DestinyEquipmentSlotDefinition',
+    EnergyType:                  'DestinyEnergyTypeDefinition',
     Faction:                     'DestinyFactionDefinition',
     Gender:                      'DestinyGenderDefinition',
     HistoricalStats:             'DestinyHistoricalStatsDefinition',

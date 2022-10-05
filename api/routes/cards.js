@@ -91,7 +91,7 @@ router.get('/characters', async function(req, res, next) {
     var membershipId = req.cookies['membership_id']
     var accessToken = req.signedCookies['access_token']
     
-    const profiler = `Retrieve characters list for user ${membershipId} (${res.ip})`
+    console.log(`Retrieve characters list for user ${membershipId} (${res.ip})`)
 
     instance.get(`/Destiny2/${membershipType}/Profile/${membershipId}`, {
         headers: {
@@ -110,6 +110,7 @@ router.get('/characters', async function(req, res, next) {
             var characterPromise = objects.character(characterData, null, null, true)
             .then((c) => characters.push(c))
             .catch((error) => {
+                console.log(error)
                 Sentry.captureException(error)
                 next(error)
             })
@@ -133,11 +134,13 @@ router.get('/characters', async function(req, res, next) {
             res.json(charactersSorted)
         })
         .catch((error) => {
+            console.log(error)
             Sentry.captureException(error)
             next(error)
         })
     })
     .catch((error) => {
+        console.log(error)
         Sentry.captureException(error)
         next(error)
     })
@@ -155,7 +158,7 @@ router.get('/', async function(req, res, next){
             'Authorization': `Bearer ${accessToken}`
         },
         params: {
-            'components': '200,205,305,304,302'
+            'components': '200,205,305,304,302,300'
         }
     })
     .then(function(response) {
@@ -171,6 +174,7 @@ router.get('/', async function(req, res, next){
         })
         .catch(err => {
             Sentry.captureException(err)
+            console.log(err)
             next(err)
         })
     })

@@ -7,7 +7,8 @@ import { BrowserTracing } from "@sentry/tracing";
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-var env = 'dev'
+const env = 'production'
+const version = '0.9.2'
 
 if (env == 'production')
     axios.defaults.baseURL = 'https://d2buildcards.com/api'
@@ -18,7 +19,10 @@ Sentry.init({
     dsn: "https://d62b76f709b441db985aa991c3a3ff3b@o1384900.ingest.sentry.io/6703838",
     integrations: [new BrowserTracing()],
     tracesSampleRate: 0.1,
+    release: `d2-build-cards-client@${version}(${env})`
 });
+
+console.log(`d2-build-cards-client@${version}(${env})`)
 
 const theme = createTheme({
     palette: {
