@@ -73,7 +73,6 @@ manifest.getJSONFromHash = function(hash, table) {
 }
 
 manifest.openDatabaseConnection = function() {
-    const profiler = 'Establish connection to manifest.db'
     open({
         filename: './manifest/manifest.db',
         driver: sqlite3.Database

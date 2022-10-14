@@ -7,7 +7,7 @@ import { BrowserTracing } from "@sentry/tracing";
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-const env = 'production'
+const env = 'dev'
 const version = '0.9.2'
 
 if (env == 'production')
